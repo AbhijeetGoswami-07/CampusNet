@@ -4,3 +4,13 @@ dist/
 .env.*
 !.env.example
 supabase/.temp/
+
+# Non-CampusNet local directories
+Echora/
+Forza/
+Games/
+Movies/
+Playlist/
+$RECYCLE.BIN/
+System Volume Information/
+*.bat

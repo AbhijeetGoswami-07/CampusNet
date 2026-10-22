@@ -1,14 +1,259 @@
-import { useEffect, useState } from 'react'
-import { ArrowRight, BarChart3, Building2, CheckCircle2, ClipboardList, FileText, Heart, Settings, ShieldCheck, Users } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { ArrowRight, BarChart3, Building2, CheckCircle2, ClipboardList, Compass, DollarSign, FileText, Heart, Map, MapPin, Settings, ShieldCheck, UserCheck, Users, Utensils } from 'lucide-react'
 import { CategorySelector, ComparisonTable, CostBreakdown, EmptyState, EnquiryModal, FilterSidebar, ImageGallery, Listing, ListingCard, MapView, RatingStars, ReportListingModal, RoleBanner, SearchBar, VerificationBadge, VacancyFreshness, VacancyStatus, sampleListings } from './components'
 import { confirmVacancy, createListing, fetchListings, fetchProviderListings, fetchSaved, getListing, parseNaturalSearch, reportListing, sendEnquiry, submitReview, type ListingFilters } from './data'
 import { supabase } from './supabase'
+import { FlatmateMatchingPage } from './modules/flatmates'
+import { ExpenseEstimatorPage } from './modules/expense'
+import { CollegesNearbyPage } from './modules/colleges'
+import { EnhancedServicesPage } from './modules/services-enhanced'
+import { FullMapPage } from './modules/map-full'
 
-export function HomePage({ go }: { go: (page: string) => void }) { return <><section className="portal-hero"><div><p className="eyebrow">VERIFIED LIVING, LESS GUESSWORK</p><h1>Find a place that<br /><em>feels like home.</em></h1><p>Transparent listings for flats, hostels, PGs, messes, and everyday services near wherever life takes you.</p><SearchBar onSearch={() => go('search')} /><div className="hero-trust"><VerificationBadge /><span>Real vacancies</span><span>Safe enquiries</span></div></div><div className="hero-photo"><img src={sampleListings[0].image} alt="Bright verified apartment interior" /><span><ShieldCheck size={16} /> 100% provider verified</span></div></section><section className="home-section"><div className="section-top"><div><p className="eyebrow">EXPLORE CAMPUSNEST</p><h2>Start with what you need</h2></div><button className="text-action" onClick={() => go('search')}>View all homes <ArrowRight size={16} /></button></div><CategorySelector onSelect={() => go('search')} /><div className="listing-grid">{sampleListings.map((listing) => <ListingCard key={listing.id} listing={listing} onOpen={() => go(`listing/${listing.id}`)} />)}</div></section><section className="home-trust"><div><ShieldCheck size={27} /><h2>More clarity.<br /><em>Better moves.</em></h2></div><div><CheckCircle2 size={19} /><b>Verified by people, not algorithms</b><span>Provider identity, address, and photos are checked.</span></div><div><CheckCircle2 size={19} /><b>Know the real monthly cost</b><span>See rent and useful estimates before you enquire.</span></div><div><CheckCircle2 size={19} /><b>Your enquiry stays private</b><span>No payment processing. No surprise calls.</span></div></section></> }
+export { FlatmateMatchingPage, ExpenseEstimatorPage, CollegesNearbyPage, EnhancedServicesPage, FullMapPage }
+
+export function HomePage({ go }: { go: (page: string) => void }) {
+  return (
+    <>
+      <section className="portal-hero">
+        <div>
+          <p className="eyebrow">VERIFIED PUNE STUDENT LIVING</p>
+          <h1>Find a place that<br /><em>feels like home.</em></h1>
+          <p>Transparent listings for flats, hostels, PGs, messes, and flatmates across Pune — near COEP, Symbiosis, MIT, VIT & SPPU.</p>
+          <SearchBar onSearch={(val) => go(`search?q=${encodeURIComponent(val)}`)} />
+          <div className="hero-trust">
+            <VerificationBadge />
+            <span>Real vacancies</span>
+            <span>Safe enquiries</span>
+            <span>0 Brokerage</span>
+          </div>
+        </div>
+        <div className="hero-photo">
+          <img src={sampleListings[0].image} alt="Bright verified student apartment in Pune" />
+          <span><ShieldCheck size={16} /> 100% provider verified</span>
+        </div>
+      </section>
+
+      {/* 6 CORE MODULES SHOWCASE */}
+      <section className="modules-showcase">
+        <div className="section-top">
+          <div>
+            <p className="eyebrow">INTEGRATED CAMPUSNEST MODULES</p>
+            <h2>6 Essential Student Tools for Pune</h2>
+          </div>
+        </div>
+        <div className="modules-grid">
+          <div className="module-banner-card" onClick={() => go('search')}>
+            <div>
+              <div className="module-badge">MODULE 1</div>
+              <h3>Accommodation Search & Filter</h3>
+              <p>Explore verified PGs, hostels & apartments in Shivajinagar, Kothrud, Baner, and Viman Nagar with zero hidden fees.</p>
+            </div>
+            <span className="card-action"><Compass size={16} /> Explore Search <ArrowRight size={14} /></span>
+          </div>
+
+          <div className="module-banner-card" onClick={() => go('flatmates')}>
+            <div>
+              <div className="module-badge">MODULE 2</div>
+              <h3>Flatmate Matching</h3>
+              <p>Match with compatible Pune college students based on university, daily budget, food preference, and cleanliness habits.</p>
+            </div>
+            <span className="card-action"><UserCheck size={16} /> Find Flatmates <ArrowRight size={14} /></span>
+          </div>
+
+          <div className="module-banner-card" onClick={() => go('services')}>
+            <div>
+              <div className="module-badge">MODULE 3</div>
+              <h3>Essential Services</h3>
+              <p>Find home-style tiffin messes (Annapurna, Vaishali), laundry drop-offs, 24/7 pharmacies & student grocery hubs.</p>
+            </div>
+            <span className="card-action"><Utensils size={16} /> Explore Services <ArrowRight size={14} /></span>
+          </div>
+
+          <div className="module-banner-card" onClick={() => go('expense-estimator')}>
+            <div>
+              <div className="module-badge">MODULE 4</div>
+              <h3>Monthly Expense Estimation</h3>
+              <p>Interactive student budget calculator with realistic Pune presets for rent, food, commute, utilities and leisure.</p>
+            </div>
+            <span className="card-action"><DollarSign size={16} /> Calculate Budget <ArrowRight size={14} /></span>
+          </div>
+
+          <div className="module-banner-card" onClick={() => go('map')}>
+            <div>
+              <div className="module-badge">MODULE 5</div>
+              <h3>Location & Map Explorer</h3>
+              <p>Interactive GIS map covering Pune city with multi-layer overlays for housing, daily services, and college campuses.</p>
+            </div>
+            <span className="card-action"><Map size={16} /> Open Interactive Map <ArrowRight size={14} /></span>
+          </div>
+
+          <div className="module-banner-card" onClick={() => go('colleges')}>
+            <div>
+              <div className="module-badge">MODULE 6</div>
+              <h3>College & Nearby Places</h3>
+              <p>Detailed campus hubs (COEP, SIT, VIT, MIT-WPU, Fergusson, SPPU, PICT) with 4.5 km proximity housing circles.</p>
+            </div>
+            <span className="card-action"><Building2 size={16} /> Browse Colleges <ArrowRight size={14} /></span>
+          </div>
+        </div>
+      </section>
+
+      <section className="home-section">
+        <div className="section-top">
+          <div>
+            <p className="eyebrow">VERIFIED HOMES IN PUNE</p>
+            <h2>Start with what you need</h2>
+          </div>
+          <button className="text-action" onClick={() => go('search')}>View all homes <ArrowRight size={16} /></button>
+        </div>
+        <CategorySelector onSelect={(cat) => go(cat === 'All homes' ? 'search' : `search?category=${encodeURIComponent(cat.toLowerCase().replace(/s$/, ''))}`)} />
+        <div className="listing-grid">
+          {sampleListings.map((listing) => (
+            <ListingCard key={listing.id} listing={listing} onOpen={() => go(`listing/${listing.id}`)} />
+          ))}
+        </div>
+      </section>
+
+      <section className="home-trust">
+        <div>
+          <ShieldCheck size={27} />
+          <h2>More clarity.<br /><em>Better moves in Pune.</em></h2>
+        </div>
+        <div>
+          <CheckCircle2 size={19} />
+          <b>Verified by people, not algorithms</b>
+          <span>Provider identity, exact Pune address, and room photographs are checked.</span>
+        </div>
+        <div>
+          <CheckCircle2 size={19} />
+          <b>Know the real monthly cost</b>
+          <span>See rent, mess costs, and travel estimates before enquiring.</span>
+        </div>
+        <div>
+          <CheckCircle2 size={19} />
+          <b>Your enquiry stays private</b>
+          <span>No spam, no broker calls, and no advance deposits required online.</span>
+        </div>
+      </section>
+    </>
+  )
+}
 
 export function SearchPage({ go }: { go: (page: string) => void }) { const [filtered, setFiltered] = useState(sampleListings); const [saved, setSaved] = useState<string[]>([]); return <section className="page-section"><div className="page-heading"><div><p className="eyebrow">SEARCH RESULTS</p><h1>Homes near your next destination</h1><p>12 verified places match your search.</p></div><button className="outline-button">Compare selected ({saved.length})</button></div><SearchBar /><CategorySelector onSelect={(category) => setFiltered(category === 'All homes' ? sampleListings : sampleListings.filter((item) => item.category.toLowerCase() === category.slice(0, -1).toLowerCase()))} /><div className="search-layout"><FilterSidebar /><div className="result-stack"><div className="result-toolbar"><b>{filtered.length + 9} homes found</b><select aria-label="Sort results"><option>Recommended</option><option>Price: low to high</option><option>Most available</option></select></div>{filtered.map((listing) => <ListingCard key={listing.id} listing={listing} onOpen={() => go(`listing/${listing.id}`)} onSave={() => setSaved((current) => current.includes(listing.id) ? current.filter((id) => id !== listing.id) : [...current, listing.id])} saved={saved.includes(listing.id)} />)}</div></div></section> }
 
-export function ListingPage({ id, go }: { id: string; go: (page: string) => void }) { const listing = sampleListings.find((item) => item.id === id) ?? sampleListings[0]; const [enquiry, setEnquiry] = useState(false); const [report, setReport] = useState(false); return <section className="page-section detail-page"><button className="back-link" onClick={() => go('search')}>← Back to search</button><ImageGallery listing={listing} /><div className="detail-layout"><div><div className="detail-title"><div><div className="eyebrow">{listing.category.toUpperCase()} · {listing.locality.toUpperCase()}</div><h1>{listing.title}</h1><p>{listing.locality}, {listing.city} <VerificationBadge /></p></div><button className="save-control" aria-label="Save listing"><Heart size={20} /></button></div><div className="detail-status"><VacancyStatus available={listing.available} total={listing.total} /><RatingStars /></div><p className="detail-copy">A thoughtfully managed home in a well-connected neighbourhood. View transparent costs, current capacity, and services before sending a no-pressure enquiry.</p><h2>What this home offers</h2><div className="amenity-list"><span>Private room</span><span>Wi-Fi included</span><span>{listing.food ? 'Food available' : 'Kitchen access'}</span><span>House rules shared upfront</span></div><button className="report-link" onClick={() => setReport(true)}>Report inaccurate information</button></div><aside className="detail-aside"><CostBreakdown listing={listing} /><button className="solid-button wide-button" onClick={() => setEnquiry(true)}>Enquire safely <ArrowRight size={17} /></button><MapView listings={[listing]} onOpen={(selected) => go(`listing/${selected.id}`)} /></aside></div>{enquiry && <EnquiryModal listing={listing} onClose={() => setEnquiry(false)} />}{report && <ReportListingModal onClose={() => setReport(false)} />}</section> }
+export function ListingPage({ id, go }: { id: string; go: (page: string) => void }) {
+  const listing = sampleListings.find((item) => item.id === id) ?? sampleListings[0]
+  const [enquiry, setEnquiry] = useState(false)
+  const [report, setReport] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  const googleMapsUrl = `https://www.google.com/maps?q=${listing.latitude},${listing.longitude}+(${encodeURIComponent(
+    listing.title
+  )})`
+
+  return (
+    <section className="page-section detail-page">
+      <div className="detail-top-nav">
+        <button className="back-link" onClick={() => go('search')}>← Back to search</button>
+        <div className="detail-top-actions">
+          <a
+            href={googleMapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="google-maps-nav-btn"
+          >
+            🗺️ Open in Google Maps
+          </a>
+          <button
+            className={`save-control ${saved ? 'saved' : ''}`}
+            onClick={() => setSaved(!saved)}
+            aria-label="Save listing"
+          >
+            <Heart size={20} fill={saved ? 'currentColor' : 'none'} />
+          </button>
+        </div>
+      </div>
+
+      <div className="detail-title-banner">
+        <div className="eyebrow">{listing.category.toUpperCase()} · {listing.locality.toUpperCase()} · PUNE</div>
+        <h1 className="detail-main-heading">{listing.title}</h1>
+        <div className="detail-meta-row">
+          <p className="detail-location-text">
+            <MapPin size={16} color="var(--coral)" /> {listing.locality}, {listing.city}
+            <VerificationBadge />
+            <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer" className="gmap-direct-link">
+              View on Google Maps ↗
+            </a>
+          </p>
+          <div className="detail-quick-tags">
+            <span className="room-badge">{listing.roomType}</span>
+            <span className="gender-badge">{listing.genderPreference}</span>
+          </div>
+        </div>
+      </div>
+
+      <ImageGallery listing={listing} />
+
+      <div className="detail-layout">
+        <div className="detail-main-content">
+          <div className="detail-status">
+            <VacancyStatus available={listing.available} total={listing.total} />
+            <RatingStars rating={listing.rating ?? 4.7} />
+          </div>
+
+          <p className="detail-copy">
+            A thoughtfully managed, verified student home in {listing.locality}, Pune.
+            Transparent monthly breakdown with no hidden brokerage, real verified vacancies,
+            and immediate access to nearby student hubs.
+          </p>
+
+          <h2>What this home offers</h2>
+          <div className="amenity-list">
+            <span>{listing.roomType}</span>
+            {listing.wifi && <span>📶 High-Speed Wi-Fi included</span>}
+            {listing.food ? <span>🍽️ Nutritious Food / Mess included</span> : <span>🍳 Kitchen access available</span>}
+            {listing.laundry && <span>👕 In-house Laundry available</span>}
+            <span>🔒 24/7 Security & CCTV</span>
+            <span>⚡ Power Backup</span>
+          </div>
+
+          <div className="detail-location-card">
+            <h3>Neighborhood & Proximity</h3>
+            <p>Situated in the heart of {listing.locality}, near major colleges, transit stops, and essential student services.</p>
+            <a
+              href={googleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="solid-button"
+              style={{ display: 'inline-flex', width: 'auto', marginTop: 12 }}
+            >
+              Get Real-time Directions on Google Maps <ArrowRight size={15} />
+            </a>
+          </div>
+
+          <button className="report-link" onClick={() => setReport(true)}>Report inaccurate information</button>
+        </div>
+
+        <aside className="detail-aside">
+          <CostBreakdown listing={listing} />
+          <button className="solid-button wide-button" onClick={() => setEnquiry(true)}>
+            Enquire safely <ArrowRight size={17} />
+          </button>
+          <div className="detail-map-box">
+            <div className="detail-map-header">
+              <strong>Exact Verified Location</strong>
+              <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer">Google Maps ↗</a>
+            </div>
+            <MapView listings={[listing]} onOpen={(selected) => go(`listing/${selected.id}`)} />
+          </div>
+        </aside>
+      </div>
+
+      {enquiry && <EnquiryModal listing={listing} onClose={() => setEnquiry(false)} />}
+      {report && <ReportListingModal onClose={() => setReport(false)} />}
+    </section>
+  )
+}
 
 export function ProviderProfilePage({ go }: { go: (page: string) => void }) { return <section className="page-section"><div className="profile-header"><div className="profile-avatar">OH</div><div><VerificationBadge /><h1>Olive House Living</h1><p>Verified provider · Bengaluru · Responds within 2 hours</p></div></div><div className="provider-layout"><div><h2>About this provider</h2><p>We create calm, well-maintained homes for students and working professionals. Every space is photographed and availability is confirmed regularly.</p><h2>Current listings</h2>{sampleListings.slice(0, 2).map((listing) => <ListingCard key={listing.id} listing={listing} onOpen={() => go(`listing/${listing.id}`)} />)}</div><aside className="profile-facts"><RatingStars /><span>Member since 2023</span><span><ShieldCheck size={16} /> Identity verified</span><span><CheckCircle2 size={16} /> 18 successful stays</span></aside></div></section> }
 
@@ -24,7 +269,131 @@ export function ModulePage({ title, eyebrow, role, go }: { title: string; eyebro
 
 export function LiveSearchPage({ go }: { go: (page: string) => void }) { const [query, setQuery] = useState(''); const [listings, setListings] = useState<Listing[]>([]); const [error, setError] = useState(''); const [loading, setLoading] = useState(false); const runSearch = async (value = query) => { setLoading(true); setError(''); try { setListings(await fetchListings({ query: value, sort: 'updated' })) } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not load listings.'); setListings([]) } finally { setLoading(false) } }; useEffect(() => { if (supabase) void runSearch('') }, []); const visible = supabase ? listings : sampleListings; return <section className="page-section"><div className="page-heading"><div><p className="eyebrow">SEARCH RESULTS</p><h1>Homes near your next destination</h1><p>{supabase ? `${listings.length} verified places match your search.` : 'Development preview listings. Connect Supabase for live results.'}</p></div></div><SearchBar onSearch={(value) => { setQuery(value); void runSearch(value) }} /><CategorySelector onSelect={(category) => { const value = category === 'All homes' ? '' : category.slice(0, -1).toLowerCase(); setQuery(value); void runSearch(value) }} /><div className="search-layout"><FilterSidebar onApply={() => void runSearch()} /><div className="result-stack">{loading ? <div className="loading-state">Loading verified listings...</div> : error ? <div className="error-state"><p>{error}</p></div> : visible.map((listing) => <ListingCard key={listing.id} listing={listing} onOpen={() => go(`listing/${listing.id}`)} />)}</div></div></section> }
 
-export function LiveListingPage({ id, go }: { id: string; go: (page: string) => void }) { const [listing, setListing] = useState<Listing | null>(null); const [enquiry, setEnquiry] = useState(false); const [report, setReport] = useState(false); const [message, setMessage] = useState(''); useEffect(() => { if (!supabase) { setListing(sampleListings.find((item) => item.id === id) ?? sampleListings[0]); return } void getListing(id).then(setListing).catch(() => setListing(null)) }, [id]); if (!listing) return <section className="page-section"><EmptyState title="Listing unavailable" text="This listing may have been removed or is awaiting approval." /></section>; return <section className="page-section detail-page"><button className="back-link" onClick={() => go('search')}>← Back to search</button><ImageGallery listing={listing} /><div className="detail-layout"><div><div className="detail-title"><div><div className="eyebrow">{listing.category.toUpperCase()} · {listing.locality.toUpperCase()}</div><h1>{listing.title}</h1><p>{listing.locality}, {listing.city} <VerificationBadge /></p></div></div><div className="detail-status"><VacancyStatus available={listing.available} total={listing.total} /><RatingStars /></div><p className="detail-copy">Transparent pricing, current availability, and verified provider details before you enquire.</p><h2>What this home offers</h2><div className="amenity-list"><span>{listing.roomType}</span>{listing.wifi && <span>Wi-Fi included</span>}{listing.food && <span>Food available</span>}{listing.laundry && <span>Laundry available</span>}</div><button className="report-link" onClick={() => setReport(true)}>Report this listing</button></div><aside className="detail-aside"><CostBreakdown listing={listing} /><button className="solid-button wide-button" onClick={() => setEnquiry(true)}>Enquire safely <ArrowRight size={17} /></button><MapView listings={[listing]} onOpen={(selected) => go(`listing/${selected.id}`)} /></aside></div>{enquiry && <EnquiryModal listing={listing} onClose={() => setEnquiry(false)} onSend={(text) => sendEnquiry(listing.id, text, 'email')} />}{report && <ReportListingModal onClose={() => setReport(false)} onSubmit={(reason, details) => reportListing(listing.id, reason, details)} />}{message && <p>{message}</p>}</section> }
+export function LiveListingPage({ id, go }: { id: string; go: (page: string) => void }) {
+  const [listing, setListing] = useState<Listing | null>(null)
+  const [enquiry, setEnquiry] = useState(false)
+  const [report, setReport] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    if (!supabase) {
+      setListing(sampleListings.find((item) => item.id === id) ?? sampleListings[0])
+      return
+    }
+    void getListing(id).then(setListing).catch(() => setListing(null))
+  }, [id])
+
+  if (!listing) return <section className="page-section"><EmptyState title="Listing unavailable" text="This listing may have been removed or is awaiting approval." /></section>
+
+  const googleMapsUrl = `https://www.google.com/maps?q=${listing.latitude},${listing.longitude}+(${encodeURIComponent(
+    listing.title
+  )})`
+
+  return (
+    <section className="page-section detail-page">
+      <div className="detail-top-nav">
+        <button className="back-link" onClick={() => go('search')}>← Back to search</button>
+        <div className="detail-top-actions">
+          <a
+            href={googleMapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="google-maps-nav-btn"
+          >
+            🗺️ Open in Google Maps
+          </a>
+          <button
+            className={`save-control ${saved ? 'saved' : ''}`}
+            onClick={() => setSaved(!saved)}
+            aria-label="Save listing"
+          >
+            <Heart size={20} fill={saved ? 'currentColor' : 'none'} />
+          </button>
+        </div>
+      </div>
+
+      <div className="detail-title-banner">
+        <div className="eyebrow">{listing.category.toUpperCase()} · {listing.locality.toUpperCase()} · PUNE</div>
+        <h1 className="detail-main-heading">{listing.title}</h1>
+        <div className="detail-meta-row">
+          <p className="detail-location-text">
+            <MapPin size={16} color="var(--coral)" /> {listing.locality}, {listing.city}
+            <VerificationBadge />
+            <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer" className="gmap-direct-link">
+              View on Google Maps ↗
+            </a>
+          </p>
+          <div className="detail-quick-tags">
+            <span className="room-badge">{listing.roomType}</span>
+            <span className="gender-badge">{listing.genderPreference} Preference</span>
+          </div>
+        </div>
+      </div>
+
+      <ImageGallery listing={listing} />
+
+      <div className="detail-layout">
+        <div className="detail-main-content">
+          <div className="detail-status">
+            <VacancyStatus available={listing.available} total={listing.total} />
+            <RatingStars rating={listing.rating ?? 4.7} />
+          </div>
+
+          <p className="detail-copy">
+            A verified student home in {listing.locality}, Pune.
+            Transparent monthly breakdown with no hidden brokerage, real verified vacancies,
+            and immediate access to nearby colleges and transit hubs.
+          </p>
+
+          <h2>What this home offers</h2>
+          <div className="amenity-list">
+            <span>{listing.roomType}</span>
+            {listing.wifi && <span>📶 High-Speed Wi-Fi</span>}
+            {listing.food ? <span>🍽️ Nutritious Food / Mess</span> : <span>🍳 Kitchen Access</span>}
+            {listing.laundry && <span>👕 Laundry Facility</span>}
+            <span>🔒 24/7 Security & CCTV</span>
+            <span>⚡ Power Backup</span>
+          </div>
+
+          <div className="detail-location-card">
+            <h3>Neighborhood & Pune Campus Proximity</h3>
+            <p>Situated conveniently in {listing.locality}, within walking or short transit distance to colleges, messes, and bus stops.</p>
+            <a
+              href={googleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="solid-button"
+              style={{ display: 'inline-flex', width: 'auto', marginTop: 14 }}
+            >
+              Get Real-time Directions on Google Maps <ArrowRight size={15} />
+            </a>
+          </div>
+
+          <button className="report-link" onClick={() => setReport(true)}>Report this listing</button>
+        </div>
+
+        <aside className="detail-aside">
+          <CostBreakdown listing={listing} />
+          <button className="solid-button wide-button" onClick={() => setEnquiry(true)}>
+            Enquire safely <ArrowRight size={17} />
+          </button>
+          <div className="detail-map-box">
+            <div className="detail-map-header">
+              <strong>Exact Verified Location</strong>
+              <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer">Google Maps ↗</a>
+            </div>
+            <MapView listings={[listing]} onOpen={(selected) => go(`listing/${selected.id}`)} />
+          </div>
+        </aside>
+      </div>
+
+      {enquiry && <EnquiryModal listing={listing} onClose={() => setEnquiry(false)} onSend={(text) => sendEnquiry(listing.id, text, 'email')} />}
+      {report && <ReportListingModal onClose={() => setReport(false)} onSubmit={(reason, details) => reportListing(listing.id, reason, details)} />}
+      {message && <p>{message}</p>}
+    </section>
+  )
+}
 
 export function LiveAuthPage({ register, go }: { register?: boolean; go: (page: string) => void }) { const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [name, setName] = useState(''); const [role, setRole] = useState<'student' | 'provider'>('student'); const [error, setError] = useState(''); const [busy, setBusy] = useState(false); const submit = async () => { if (!supabase) { setError('Configure Supabase before using account access.'); return } setBusy(true); setError(''); const result = register ? await supabase.auth.signUp({ email, password, options: { data: { full_name: name, role } } }) : await supabase.auth.signInWithPassword({ email, password }); setBusy(false); if (result.error) { setError(result.error.message); return } go(register ? 'student-dashboard' : 'student-dashboard') }; return <section className="auth-page"><form className="auth-card" onSubmit={(event) => { event.preventDefault(); void submit() }}><p className="eyebrow">CAMPUSNEST ACCOUNT</p><h1>{register ? 'Make your next move.' : 'Welcome back.'}</h1><p>{register ? 'Create a secure account to save homes and enquire safely.' : 'Sign in to manage your saved homes and enquiries.'}</p>{register && <label>Full name<input required value={name} onChange={(event) => setName(event.target.value)} /></label>}<label>Email address<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label><label>Password<input required minLength={6} type="password" value={password} onChange={(event) => setPassword(event.target.value)} /></label>{register && <label>Account type<select value={role} onChange={(event) => setRole(event.target.value as 'student' | 'provider')}><option value="student">Student</option><option value="provider">Provider</option></select></label>}{error && <p className="form-error">{error}</p>}<button className="solid-button wide-button" disabled={busy}>{busy ? 'Working...' : register ? 'Create account' : 'Sign in securely'} <ArrowRight size={16} /></button><button type="button" className="text-action center-action" onClick={() => go(register ? 'login' : 'register')}>{register ? 'Already have an account? Sign in' : 'Need an account? Register'}</button><small className="auth-note"><ShieldCheck size={14} /> Administrator access is assigned manually.</small></form></section> }
 
@@ -34,6 +403,257 @@ export function SavedListingsPage({ go }: { go: (page: string) => void }) { cons
 
 export function ProviderWorkspace({ go }: { go: (page: string) => void }) { const [listings, setListings] = useState<Listing[]>([]); const [error, setError] = useState(''); const [busy, setBusy] = useState<string | null>(null); const load = async () => { if (!supabase) { setListings(sampleListings); return } try { setListings(await fetchProviderListings()) } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not load your listings.') } }; useEffect(() => { void load() }, []); const confirm = async (listing: Listing) => { setBusy(listing.id); try { await confirmVacancy(listing.id, listing.available); await load() } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not confirm vacancy.') } finally { setBusy(null) } }; return <section className="page-section workspace"><RoleBanner role="provider" /><div className="workspace-heading"><div><p className="eyebrow">PROVIDER WORKSPACE</p><h1>Keep your listings trustworthy.</h1><p>Confirm availability regularly so seekers can make informed decisions.</p></div><button className="solid-button" onClick={() => go('add-listing')}>Add listing <ArrowRight size={16} /></button></div>{error && <div className="error-state">{error}</div>}<div className="provider-listings">{listings.map((listing) => <article className="provider-listing-row" key={listing.id}><div><h3>{listing.title}</h3><p>{listing.locality}, {listing.city} · {listing.available} of {listing.total} available</p><VacancyFreshness lastVerifiedAt={listing.lastVerifiedAt} /></div><div className="provider-listing-actions"><button className="outline-button" onClick={() => go(`listing/${listing.id}`)}>View</button><button className="solid-button" disabled={busy === listing.id} onClick={() => void confirm(listing)}>{busy === listing.id ? 'Confirming...' : 'Confirm vacancy'} <CheckCircle2 size={15} /></button></div></article>)}</div>{!listings.length && !error && <EmptyState title="No listings yet" text="Add your first property to start receiving enquiries." />}</section> }
 
-export function CompareSearchPage({ go }: { go: (page: string) => void }) { const [listings, setListings] = useState<Listing[]>([]); const [selected, setSelected] = useState<Listing[]>([]); const [showMap, setShowMap] = useState(false); const [error, setError] = useState(''); const [activeFilters, setActiveFilters] = useState<ListingFilters>({ sort: 'updated' }); useEffect(() => { if (supabase) void fetchListings(activeFilters).then(setListings).catch((caught) => setError(caught instanceof Error ? caught.message : 'Could not load listings.')) }, []); const available = supabase ? listings : sampleListings; const toggle = (listing: Listing) => setSelected((current) => current.some((item) => item.id === listing.id) ? current.filter((item) => item.id !== listing.id) : current.length < 3 ? [...current, listing] : current); const applyFilters = (filters: ListingFilters) => { const nextFilters = { ...filters, sort: 'updated' as const }; setActiveFilters(nextFilters); if (supabase) void fetchListings(nextFilters).then(setListings).catch((caught) => setError(caught instanceof Error ? caught.message : 'Could not apply filters.')) }; return <section className="page-section"><div className="page-heading"><div><p className="eyebrow">SEARCH & COMPARE</p><h1>Choose up to three homes</h1><p>Compare recurring costs, deposits, availability, and trust signals side by side.</p></div><span className="comparison-count">{selected.length}/3 selected</span></div><NaturalSearchBox onApply={applyFilters} /><SearchBar onSearch={(value) => applyFilters({ ...activeFilters, query: value })} /><div className="view-toggle" role="group" aria-label="Search result view"><button className={!showMap ? 'selected' : ''} onClick={() => setShowMap(false)}>List</button><button className={showMap ? 'selected' : ''} onClick={() => setShowMap(true)}>Map</button></div><div className={showMap ? 'search-results map-mode' : 'search-results'}><div className="result-stack"><FilterSidebar onApply={applyFilters} />{error && <div className="error-state">{error}</div>}{available.map((listing) => <ListingCard key={listing.id} listing={listing} onOpen={() => go(`listing/${listing.id}`)} onCompare={() => toggle(listing)} compareSelected={selected.some((item) => item.id === listing.id)} />)}</div><div className="search-map"><MapView listings={available} onOpen={(listing) => go(`listing/${listing.id}`)} /></div></div>{selected.length > 0 && <section className="comparison-section"><div className="section-top"><div><p className="eyebrow">SIDE-BY-SIDE</p><h2>Make the monthly cost clear</h2></div><button className="outline-button" onClick={() => setSelected([])}>Clear comparison</button></div><ComparisonTable listings={selected} /></section>}</section> }
+export function CompareSearchPage({
+  go,
+  initialQuery = '',
+  initialCategory = ''
+}: {
+  go: (page: string) => void
+  initialQuery?: string
+  initialCategory?: string
+}) {
+  const [listings, setListings] = useState<Listing[]>([])
+  const [selected, setSelected] = useState<Listing[]>([])
+  const [showMap, setShowMap] = useState(false)
+  const [error, setError] = useState('')
+  const [activeFilters, setActiveFilters] = useState<ListingFilters>(() => ({
+    sort: 'updated',
+    query: initialQuery || '',
+    category: initialCategory || undefined,
+  }))
+
+  useEffect(() => {
+    setActiveFilters((prev) => ({
+      ...prev,
+      query: initialQuery || '',
+      category: initialCategory || undefined,
+    }))
+  }, [initialQuery, initialCategory])
+
+  useEffect(() => {
+    if (supabase) {
+      void fetchListings(activeFilters)
+        .then(setListings)
+        .catch((caught) => setError(caught instanceof Error ? caught.message : 'Could not load listings.'))
+    }
+  }, [activeFilters.query, activeFilters.category, activeFilters.roomType, activeFilters.gender])
+
+  const baseListings = supabase ? listings : sampleListings
+
+  const available = useMemo(() => {
+    return baseListings.filter((item) => {
+      if (activeFilters.query) {
+        const q = activeFilters.query.toLowerCase().trim()
+        const matchesQuery =
+          item.title.toLowerCase().includes(q) ||
+          item.locality.toLowerCase().includes(q) ||
+          item.city.toLowerCase().includes(q) ||
+          item.category.toLowerCase().includes(q) ||
+          item.roomType.toLowerCase().includes(q) ||
+          (item.collegeName && item.collegeName.toLowerCase().includes(q))
+        if (!matchesQuery) return false
+      }
+      if (activeFilters.category && activeFilters.category !== 'all') {
+        const cat = activeFilters.category.toLowerCase().replace(/s$/, '')
+        const itemCat = item.category.toLowerCase().replace(/s$/, '')
+        if (!itemCat.includes(cat) && !cat.includes(itemCat)) return false
+      }
+      if (activeFilters.maxRent && item.price > activeFilters.maxRent) {
+        return false
+      }
+      if (activeFilters.roomType && item.roomType.toLowerCase() !== activeFilters.roomType.toLowerCase()) {
+        return false
+      }
+      if (activeFilters.gender && activeFilters.gender !== 'Any' && activeFilters.gender !== 'any preference') {
+        if (item.genderPreference.toLowerCase() !== activeFilters.gender.toLowerCase()) {
+          return false
+        }
+      }
+      if (activeFilters.recentlyVerified && !item.verified) {
+        return false
+      }
+      return true
+    })
+  }, [baseListings, activeFilters])
+
+  const toggle = (listing: Listing) => {
+    setSelected((current) =>
+      current.some((item) => item.id === listing.id)
+        ? current.filter((item) => item.id !== listing.id)
+        : current.length < 3
+        ? [...current, listing]
+        : current
+    )
+  }
+
+  const applyFilters = (filters: ListingFilters) => {
+    const nextFilters = { ...filters, sort: 'updated' as const }
+    setActiveFilters(nextFilters)
+    if (supabase) {
+      void fetchListings(nextFilters)
+        .then(setListings)
+        .catch((caught) => setError(caught instanceof Error ? caught.message : 'Could not apply filters.'))
+    }
+  }
+
+  const scrollToComparison = () => {
+    const el = document.getElementById('comparison-section')
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+
+  return (
+    <section className="page-section">
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">MODULE 1 · ACCOMMODATION SEARCH & COMPARE</p>
+          <h1>Verified Accommodations in Pune</h1>
+          <p>Compare recurring rent, deposits, distance to campus, and availability side by side.</p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span className="comparison-count">{selected.length}/3 selected for compare</span>
+          {selected.length > 0 && (
+            <button
+              className="solid-button"
+              onClick={scrollToComparison}
+              style={{ padding: '8px 14px', fontSize: 12 }}
+            >
+              View Comparison Table ({selected.length}) <ArrowRight size={14} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      <NaturalSearchBox onApply={applyFilters} />
+      <SearchBar
+        defaultValue={activeFilters.query || ''}
+        onSearch={(value) => applyFilters({ ...activeFilters, query: value })}
+      />
+
+      <div className="view-toggle" role="group" aria-label="Search result view">
+        <button className={!showMap ? 'selected' : ''} onClick={() => setShowMap(false)}>
+          List & Filters ({available.length})
+        </button>
+        <button className={showMap ? 'selected' : ''} onClick={() => setShowMap(true)}>
+          Map View
+        </button>
+      </div>
+
+      <div className={showMap ? 'search-layout-compare map-mode' : 'search-layout-compare'}>
+        <aside className="search-filter-sidebar">
+          <FilterSidebar onApply={applyFilters} />
+        </aside>
+
+        <div className="result-stack">
+          <div className="result-toolbar">
+            <b>{available.length} verified homes found</b>
+            <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+              Check 'Compare' on any 2 or 3 cards to view side-by-side
+            </span>
+          </div>
+
+          {error && <div className="error-state">{error}</div>}
+
+          {available.length === 0 ? (
+            <div
+              className="empty-state"
+              style={{
+                padding: '48px 24px',
+                textAlign: 'center',
+                background: 'var(--surface)',
+                borderRadius: 12,
+                border: '1px solid var(--border)'
+              }}
+            >
+              <Building2 size={36} style={{ color: 'var(--muted)', margin: '0 auto 12px' }} />
+              <h3 style={{ fontSize: 18, marginBottom: 8 }}>No accommodations found</h3>
+              <p style={{ color: 'var(--muted)', fontSize: 14, maxWidth: 420, margin: '0 auto 16px' }}>
+                We couldn't find any verified places matching your current search. Try searching for "Kothrud", "COEP", "PG", "Flat", or clear your filters.
+              </p>
+              <button
+                className="solid-button"
+                onClick={() => applyFilters({ sort: 'updated' })}
+                style={{ padding: '8px 18px', fontSize: 13 }}
+              >
+                Clear all filters
+              </button>
+            </div>
+          ) : (
+            available.map((listing) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                onOpen={() => go(`listing/${listing.id}`)}
+                onCompare={() => toggle(listing)}
+                compareSelected={selected.some((item) => item.id === listing.id)}
+              />
+            ))
+          )}
+        </div>
+
+        <div className="search-map">
+          <MapView listings={available} onOpen={(listing) => go(`listing/${listing.id}`)} />
+        </div>
+      </div>
+
+      {/* Sticky Bottom Comparison Dock */}
+      {selected.length > 0 && (
+        <aside className="compare-floating-dock" aria-label="Selected properties comparison dock">
+          <div className="compare-dock-inner">
+            <div className="compare-dock-left">
+              <span className="compare-dock-badge">{selected.length}/3 Selected</span>
+              <div className="compare-dock-chips">
+                {selected.map((item) => (
+                  <div key={item.id} className="compare-dock-chip">
+                    <img src={item.image} alt={item.title} />
+                    <span>{item.title}</span>
+                    <button
+                      type="button"
+                      onClick={() => toggle(item)}
+                      aria-label={`Remove ${item.title} from comparison`}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="compare-dock-right">
+              <button className="solid-button" onClick={scrollToComparison}>
+                Compare Side-by-Side <ArrowRight size={15} />
+              </button>
+              <button className="outline-button" onClick={() => setSelected([])}>
+                Clear
+              </button>
+            </div>
+          </div>
+        </aside>
+      )}
+
+      {selected.length > 0 && (
+        <section id="comparison-section" className="comparison-section" style={{ scrollMarginTop: 90 }}>
+          <div className="section-top">
+            <div>
+              <p className="eyebrow">MODULE 1 · SIDE-BY-SIDE PROPERTY COMPARISON</p>
+              <h2>Comparing {selected.length} Selected Homes in Pune</h2>
+              <p style={{ color: 'var(--muted)', fontSize: 13, margin: '4px 0 0' }}>
+                Full recurring breakdown, security deposits, distance to colleges, and amenities check.
+              </p>
+            </div>
+            <button className="outline-button" onClick={() => setSelected([])}>
+              Clear comparison
+            </button>
+          </div>
+          <ComparisonTable
+            listings={selected}
+            onOpen={(listing) => go(`listing/${listing.id}`)}
+            onRemove={(listing) => toggle(listing)}
+          />
+        </section>
+      )}
+    </section>
+  )
+}
 
 function NaturalSearchBox({ onApply }: { onApply: (filters: ListingFilters) => void }) { const [prompt, setPrompt] = useState(''); const [busy, setBusy] = useState(false); const [message, setMessage] = useState(''); const submit = async (event: React.FormEvent) => { event.preventDefault(); setBusy(true); setMessage(''); try { const filters = await parseNaturalSearch(prompt); onApply({ ...filters, sort: 'updated' }); setMessage('Filters applied.'); } catch (caught) { setMessage(caught instanceof Error ? caught.message : 'Search assistant is unavailable. Normal filters are still available.') } finally { setBusy(false) } }; return <form className="natural-search" onSubmit={submit}><div><label htmlFor="natural-search-input">Describe your ideal place</label><textarea id="natural-search-input" value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Try: girls hostel below 9000 total monthly cost within 2 km of ABC College with food, Wi-Fi, and laundry." /><small>Optional AI assistance. Your text is converted into search filters only.</small></div><button className="solid-button" disabled={busy}>{busy ? 'Reading...' : 'Find matches'} <ArrowRight size={16} /></button>{message && <p className="natural-search-message">{message}</p>}</form> }
