@@ -77,7 +77,7 @@ function CollegeCard({
   onSelect: (c: College) => void;
   selected: boolean;
 }) {
-  const gmapUrl = `https://www.google.com/maps?q=${college.latitude},${college.longitude}+(${encodeURIComponent(college.name)})`
+  const gmapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${college.name}, ${college.area}, Pune`)}`
 
   return (
     <article
@@ -337,7 +337,7 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
                       <span>{selected.area}, Pune</span>
                       <span>{selected.students.toLocaleString('en-IN')} students</span>
                       <a
-                        href={`https://www.google.com/maps?q=${selected.latitude},${selected.longitude}+(${encodeURIComponent(selected.name)})`}
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${selected.name}, ${selected.area}, Pune`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="google-maps-btn"
@@ -386,7 +386,7 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
                             View details <ArrowRight size={13} />
                           </button>
                           <a
-                            href={`https://www.google.com/maps?q=${l.latitude},${l.longitude}+(${encodeURIComponent(l.title)})`}
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${l.title}, ${l.locality}, Pune`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="google-maps-btn"
@@ -423,7 +423,7 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
                             📞 {m.phone}
                           </a>
                           <a
-                            href={`https://www.google.com/maps?q=${m.latitude},${m.longitude}+(${encodeURIComponent(m.name)})`}
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${m.name}, ${m.address}, Pune`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="google-maps-btn"
@@ -454,7 +454,7 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
                         <span><strong>{s.calcDist.toFixed(1)} km</strong> from {selected.shortName}</span>
                         <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                           <a href={`tel:${s.phone}`} style={{ color: 'var(--coral)', fontWeight: 600, fontSize: 12 }}>📞 Call</a>
-                          <a href={`https://www.google.com/maps?q=${s.latitude},${s.longitude}+(${encodeURIComponent(s.name)})`} target="_blank" rel="noopener noreferrer" className="google-maps-btn">Google Maps ↗</a>
+                          <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.name}, ${s.address}, Pune`)}`} target="_blank" rel="noopener noreferrer" className="google-maps-btn">Google Maps ↗</a>
                         </div>
                       </div>
                     </Popup>
@@ -479,7 +479,7 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
                         <span><strong>{s.calcDist.toFixed(1)} km</strong> from {selected.shortName}</span>
                         <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                           <a href={`tel:${s.phone}`} style={{ color: 'var(--coral)', fontWeight: 600, fontSize: 12 }}>📞 Emergency Call</a>
-                          <a href={`https://www.google.com/maps?q=${s.latitude},${s.longitude}+(${encodeURIComponent(s.name)})`} target="_blank" rel="noopener noreferrer" className="google-maps-btn">Google Maps ↗</a>
+                          <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.name}, ${s.address}, Pune`)}`} target="_blank" rel="noopener noreferrer" className="google-maps-btn">Google Maps ↗</a>
                         </div>
                       </div>
                     </Popup>
@@ -582,7 +582,7 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
                               <Phone size={11} /> Call
                             </a>
                             <a
-                              href={`https://www.google.com/maps?q=${m.latitude},${m.longitude}+(${encodeURIComponent(m.name)})`}
+                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${m.name}, ${m.address}, Pune`)}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-action"
@@ -641,7 +641,7 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
                               <Phone size={11} /> Call
                             </a>
                             <a
-                              href={`https://www.google.com/maps?q=${s.latitude},${s.longitude}+(${encodeURIComponent(s.name)})`}
+                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.name}, ${s.address}, Pune`)}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-action"
@@ -700,7 +700,7 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
                               <Phone size={11} /> Emergency
                             </a>
                             <a
-                              href={`https://www.google.com/maps?q=${s.latitude},${s.longitude}+(${encodeURIComponent(s.name)})`}
+                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.name}, ${s.address}, Pune`)}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-action"
@@ -779,7 +779,7 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
                                 <Phone size={11} /> Call
                               </a>
                               <a
-                                href={`https://www.google.com/maps?q=${s.latitude},${s.longitude}+(${encodeURIComponent(s.name)})`}
+                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.name}, ${s.address}, Pune`)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-action"

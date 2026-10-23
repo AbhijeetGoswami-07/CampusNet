@@ -46,7 +46,7 @@ function ServiceCard({ service }: { service: Service }) {
         <span className="service-price">{service.priceRange}</span>
         <div style={{ display: 'flex', gap: 8 }}>
           <a
-            href={`https://www.google.com/maps?q=${service.latitude},${service.longitude}+(${encodeURIComponent(service.name)})`}
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${service.name}, ${service.address}, Pune`)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="outline-button"
@@ -155,7 +155,7 @@ export function EnhancedServicesPage() {
                         📞 Call {s.phone}
                       </a>
                       <a
-                        href={`https://www.google.com/maps?q=${s.latitude},${s.longitude}+(${encodeURIComponent(s.name)})`}
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.name}, ${s.address}, Pune`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="google-maps-btn"

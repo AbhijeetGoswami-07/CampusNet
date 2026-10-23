@@ -224,7 +224,7 @@ export function FullMapPage({ go }: { go: (page: string) => void }) {
                       View details <ArrowRight size={13} />
                     </button>
                     <a
-                      href={`https://www.google.com/maps?q=${l.latitude},${l.longitude}+(${encodeURIComponent(l.title)})`}
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${l.title}, ${l.locality}, Pune`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="google-maps-btn"
@@ -262,7 +262,7 @@ export function FullMapPage({ go }: { go: (page: string) => void }) {
                     📞 {s.phone}
                   </a>
                   <a
-                    href={`https://www.google.com/maps?q=${s.latitude},${s.longitude}+(${encodeURIComponent(s.name)})`}
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.name}, ${s.address}, Pune`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="google-maps-btn"
@@ -293,7 +293,7 @@ export function FullMapPage({ go }: { go: (page: string) => void }) {
                       Nearby housing <ArrowRight size={13} />
                     </button>
                     <a
-                      href={`https://www.google.com/maps?q=${c.latitude},${c.longitude}+(${encodeURIComponent(c.name)})`}
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${c.name}, ${c.area}, Pune`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="google-maps-btn"
