@@ -135,7 +135,7 @@ function CollegeCard({
 export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
   const [selected, setSelected] = useState<College | null>(puneColleges[0])
   // Allow choosing one option category at a time instead of dumping all at once
-  const [activeTab, setActiveTab] = useState<'hostels' | 'messes' | 'laundry' | 'medical' | 'other_options'>('hostels')
+  const [activeTab, setActiveTab] = useState<'hostels' | 'messes' | 'laundry' | 'medical' | 'marts' | 'other_options'>('hostels')
 
   const calcDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const dLat = (lat2 - lat1) * 111.32
@@ -171,6 +171,7 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
   const nearbyMesses = nearbyServices.filter(s => s.category === 'mess')
   const nearbyLaundry = nearbyServices.filter(s => s.category === 'laundry')
   const nearbyMedical = nearbyServices.filter(s => s.category === 'medical')
+  const nearbyMarts = nearbyServices.filter(s => s.category === 'grocery')
   const nearbyStores = nearbyServices.filter(s => s.category === 'grocery' || s.category === 'salon')
 
   const mapCenter: LatLngExpression = selected
@@ -719,6 +720,86 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
                 </div>
               )}
 
+              
+
+              {/* TAB 5: DMart & JioMart Supermarts Only */}
+              {activeTab === 'marts' && (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                    <h3 style={{ fontSize: 18, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <ShoppingBag size={19} color="#10b981" />
+                      DMart & JioMart Supermarts near {selected.shortName} ({nearbyMarts.length})
+                    </h3>
+                    <button className="text-action" onClick={() => setActiveTab('other_options')} style={{ fontSize: 13 }}>
+                      See other options <ArrowRight size={14} />
+                    </button>
+                  </div>
+                  {nearbyMarts.length ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 14 }}>
+                      {nearbyMarts.map(s => {
+                        const isDMart = s.name.toLowerCase().includes('dmart')
+                        const isJioMart = s.name.toLowerCase().includes('jiomart') || s.name.toLowerCase().includes('smart')
+                        return (
+                          <div key={s.id} className="nearby-service-row">
+                            <div className="service-category-dot" data-cat="grocery" style={{ background: isDMart ? '#059669' : isJioMart ? '#2563eb' : '#10b981' }} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <strong>{s.name}</strong>
+                                <span style={{
+                                  fontSize: 10,
+                                  padding: '2px 6px',
+                                  borderRadius: 4,
+                                  fontWeight: 700,
+                                  background: isDMart ? '#dcfce7' : '#dbeafe',
+                                  color: isDMart ? '#15803d' : '#1d4ed8'
+                                }}>
+                                  {isDMart ? 'DMart' : isJioMart ? 'JioMart' : 'Store'}
+                                </span>
+                              </div>
+                              <div style={{ display: 'flex', gap: 8, alignItems: 'center', margin: '4px 0' }}>
+                                <span className="nearby-badge nearby-badge-dist">
+                                  <MapPin size={11} /> {s.calcDist.toFixed(1)} km from campus
+                                </span>
+                                <span style={{ fontSize: 13, color: 'var(--ink)', fontWeight: 600 }}>{s.priceRange}</span>
+                              </div>
+                              <p style={{ fontSize: 12, color: 'var(--muted)', margin: 0 }}>
+                                <Clock size={11} style={{ display: 'inline', marginRight: 4 }} />
+                                {s.timing} · {s.address}
+                              </p>
+                              <p style={{ fontSize: 12, color: 'var(--ink-light)', margin: '4px 0 0' }}>
+                                {s.description}
+                              </p>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
+                              <a
+                                href={`tel:${s.phone}`}
+                                className="outline-button"
+                                style={{ fontSize: 11, padding: '6px 10px', whiteSpace: 'nowrap' }}
+                              >
+                                <Phone size={11} /> Call
+                              </a>
+                              <a
+                                href={`https://www.google.com/maps?q=${s.latitude},${s.longitude}+(${encodeURIComponent(s.name)})`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-action"
+                                style={{ fontSize: 11, textAlign: 'center' }}
+                              >
+                                Maps ↗
+                              </a>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <p style={{ color: 'var(--muted)', fontSize: 14, padding: '24px 0', textAlign: 'center' }}>
+                      No DMart or JioMart stores within immediate 2.2 km radius of {selected.shortName}.
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* TAB 5: "See Other Options" - Comprehensively Explains ALL Student Options */}
               {activeTab === 'other_options' && (
                 <div>
@@ -733,6 +814,26 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
                   </div>
 
                   <div className="see-other-options-grid">
+                    {/* Option 0: DMart & JioMart Supermarts */}
+                    <div className="see-other-card" onClick={() => setActiveTab('marts')}>
+                      <div className="see-other-card-header">
+                        <div className="see-other-icon-wrap" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+                          <ShoppingBag size={22} />
+                        </div>
+                        <div>
+                          <h4>DMart & JioMart Supermarts</h4>
+                          <span style={{ fontSize: 12, color: '#10b981', fontWeight: 600 }}>{nearbyMarts.length} supermarkets nearby</span>
+                        </div>
+                      </div>
+                      <p>
+                        Official DMart Ready, DMart Superstores, and Reliance JioMart stores for groceries, daily essentials, and snacks.
+                      </p>
+                      <div className="see-other-card-footer">
+                        <span>Wholesale student pricing</span>
+                        <span>Open Marts <ArrowRight size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /></span>
+                      </div>
+                    </div>
+
                     {/* Option 1: Hostels & PGs */}
                     <div className="see-other-card" onClick={() => setActiveTab('hostels')}>
                       <div className="see-other-card-header">

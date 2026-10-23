@@ -7,6 +7,7 @@ import { getCustomMapIcon } from './colleges'
 
 const LOCALITY_COORDS: Record<string, [number, number]> = {
   all: [18.5204, 73.8567],
+  Alandi: [18.6747, 73.8920],
   Shivajinagar: [18.5290, 73.8430],
   Kothrud: [18.5040, 73.8080],
   Baner: [18.5596, 73.7896],
@@ -42,7 +43,7 @@ export function FullMapPage({ go }: { go: (page: string) => void }) {
     setLayers(prev => ({ ...prev, [key]: !prev[key] }))
   }
 
-  const localities = ['all', 'Shivajinagar', 'Kothrud', 'Baner', 'Viman Nagar', 'Hinjawadi', 'Deccan', 'Aundh', 'Dhankawadi', 'Hadapsar']
+  const localities = ['all', 'Alandi', 'Shivajinagar', 'Kothrud', 'Baner', 'Viman Nagar', 'Hinjawadi', 'Deccan', 'Aundh', 'Dhankawadi', 'Hadapsar']
 
   const handleLocalityClick = (loc: string) => {
     setSelectedLocality(loc)
@@ -244,7 +245,15 @@ export function FullMapPage({ go }: { go: (page: string) => void }) {
               </Tooltip>
               <Popup>
                 <div className="map-popup">
-                  <span style={{ fontSize: 10, color: '#06b6d4', fontWeight: 700 }}>{s.category.toUpperCase()}</span>
+                  {(() => {
+                    const isDMart = s.name.toLowerCase().includes('dmart');
+                    const isJioMart = s.name.toLowerCase().includes('jiomart') || s.name.toLowerCase().includes('smart');
+                    return (
+                      <span style={{ fontSize: 10, color: isDMart ? '#059669' : isJioMart ? '#2563eb' : '#06b6d4', fontWeight: 800 }}>
+                        {isDMart ? '🛒 OFFICIAL DMART' : isJioMart ? '🛍️ JIOMART / SMART' : s.category.toUpperCase()}
+                      </span>
+                    );
+                  })()}
                   <strong>{s.name}</strong>
                   <span>{s.address}</span>
                   <span>{s.timing}</span>
