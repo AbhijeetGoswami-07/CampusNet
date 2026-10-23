@@ -16,7 +16,8 @@ const LOCALITY_COORDS: Record<string, [number, number]> = {
   Deccan: [18.5180, 73.8390],
   Aundh: [18.5620, 73.8080],
   Dhankawadi: [18.4630, 73.8580],
-  Hadapsar: [18.5018, 73.9259]
+  Hadapsar: [18.5018, 73.9259],
+  Moshi: [18.6806, 73.8368]
 }
 
 function MapFlyController({ center, zoom }: { center: LatLngExpression; zoom: number }) {
@@ -43,7 +44,7 @@ export function FullMapPage({ go }: { go: (page: string) => void }) {
     setLayers(prev => ({ ...prev, [key]: !prev[key] }))
   }
 
-  const localities = ['all', 'Alandi', 'Shivajinagar', 'Kothrud', 'Baner', 'Viman Nagar', 'Hinjawadi', 'Deccan', 'Aundh', 'Dhankawadi', 'Hadapsar']
+  const localities = ['all', 'Alandi', 'Shivajinagar', 'Kothrud', 'Baner', 'Viman Nagar', 'Hinjawadi', 'Deccan', 'Aundh', 'Dhankawadi', 'Hadapsar', 'Moshi']
 
   const handleLocalityClick = (loc: string) => {
     setSelectedLocality(loc)

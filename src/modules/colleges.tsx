@@ -171,7 +171,13 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
   const nearbyMesses = nearbyServices.filter(s => s.category === 'mess')
   const nearbyLaundry = nearbyServices.filter(s => s.category === 'laundry')
   const nearbyMedical = nearbyServices.filter(s => s.category === 'medical')
-  const nearbyMarts = nearbyServices.filter(s => s.category === 'grocery')
+  const nearbyMarts = selected
+    ? puneServices
+        .filter(s => s.category === 'grocery')
+        .map(s => ({ ...s, calcDist: calcDistance(selected.latitude, selected.longitude, s.latitude, s.longitude) }))
+        .filter(s => s.calcDist <= 6.5)
+        .sort((a, b) => a.calcDist - b.calcDist)
+    : []
   const nearbyStores = nearbyServices.filter(s => s.category === 'grocery' || s.category === 'salon')
 
   const mapCenter: LatLngExpression = selected
@@ -485,6 +491,45 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
                     </Popup>
                   </Marker>
                 ))}
+
+                {/* DMart & JioMart Supermarts */}
+                {(activeTab === 'marts' || activeTab === 'other_options') && nearbyMarts.map(s => {
+                  const isDMart = s.name.toLowerCase().includes('dmart');
+                  const isJioMart = s.name.toLowerCase().includes('jiomart') || s.name.toLowerCase().includes('smart');
+                  return (
+                    <Marker
+                      key={s.id}
+                      position={[s.latitude, s.longitude]}
+                      icon={getCustomMapIcon('mart')}
+                    >
+                      <Tooltip direction="top" offset={[0, -22]}>
+                        🛒 {s.name} ({s.calcDist.toFixed(1)} km)
+                      </Tooltip>
+                      <Popup>
+                        <div className="map-popup">
+                          <span style={{ fontSize: 10, color: isDMart ? '#059669' : isJioMart ? '#2563eb' : '#10b981', fontWeight: 800 }}>
+                            {isDMart ? '🛒 OFFICIAL DMART' : isJioMart ? '🛍️ JIOMART / SMART' : 'SUPERMARKET'}
+                          </span>
+                          <strong>{s.name}</strong>
+                          <span>{s.address}</span>
+                          <span>{s.timing}</span>
+                          <span><strong>{s.calcDist.toFixed(1)} km</strong> from {selected.shortName}</span>
+                          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                            <a href={`tel:${s.phone}`} style={{ color: 'var(--coral)', fontWeight: 600, fontSize: 12 }}>📞 Call</a>
+                            <a
+                              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.name}, ${s.address}, Pune`)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="google-maps-btn"
+                            >
+                              Google Maps ↗
+                            </a>
+                          </div>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  );
+                })}
               </MapContainer>
             </div>
 
