@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from 'react'
-import { ArrowRight, BadgeCheck, CheckCircle2, ChevronRight, ExternalLink, Heart, MapPin, Menu, Search, ShieldCheck, Star, Wifi, X } from 'lucide-react'
+import { ArrowRight, BadgeCheck, CheckCircle2, ChevronRight, ExternalLink, Heart, LogOut, MapPin, Menu, Search, ShieldCheck, Star, User, Wifi, X } from 'lucide-react'
 import { MapContainer, Marker, Popup, TileLayer, Tooltip } from 'react-leaflet'
 import type { LatLngExpression } from 'leaflet'
 import { puneListings, type PuneListing } from './data-pune'
@@ -85,8 +85,23 @@ export function Navbar({ onNavigate, active = 'home', signedIn = false, role, on
 
       {signedIn ? (
         <div className="nav-account">
-          <button className="nav-login" onClick={() => navTo(`${role ?? 'student'}-dashboard`)}>{role ?? 'Account'}</button>
-          <button className="nav-logout" onClick={onLogout}>Log out</button>
+          <button
+            className="nav-role-badge"
+            onClick={() => navTo(`${role ?? 'student'}-dashboard`)}
+            title={`Open ${role ? role.charAt(0).toUpperCase() + role.slice(1) : 'Student'} Workspace`}
+          >
+            <User size={13} />
+            <span style={{ textTransform: 'capitalize' }}>{role ?? 'Student'}</span>
+            <ChevronRight size={12} style={{ opacity: 0.6 }} />
+          </button>
+          <button
+            className="nav-logout-btn"
+            onClick={onLogout}
+            title="Log out of your account"
+          >
+            <LogOut size={13} />
+            <span>Log out</span>
+          </button>
         </div>
       ) : (
         <button className="nav-login" onClick={() => navTo('login')}>Sign in <ArrowRight size={15} /></button>
