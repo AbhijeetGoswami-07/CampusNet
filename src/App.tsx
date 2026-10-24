@@ -39,25 +39,70 @@ function parseRoute() {
 
 export default function App() {
   const [routeInfo, setRouteInfo] = useState(parseRoute)
-  const [session, setSession] = useState(false)
-  const [role, setRole] = useState<'student' | 'provider' | 'admin' | null>(null)
+  const [session, setSession] = useState<boolean>(() => {
+    return Boolean(localStorage.getItem('campusnet_session'))
+  })
+  const [role, setRole] = useState<'student' | 'provider' | 'admin' | null>(() => {
+    const saved = localStorage.getItem('campusnet_session')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        return parsed.role || 'student'
+      } catch {
+        return null
+      }
+    }
+    return null
+  })
 
   useEffect(() => {
     const update = () => setRouteInfo(parseRoute())
     window.addEventListener('hashchange', update)
-    const client = supabase
-    if (!client) return () => window.removeEventListener('hashchange', update)
-    client.auth.getSession().then(async ({ data }) => {
-      setSession(Boolean(data.session))
-      if (data.session) {
-        const profile = await client.from('profiles').select('role').eq('id', data.session.user.id).single()
-        setRole(profile.data?.role ?? null)
+
+    const syncLocalSession = () => {
+      const saved = localStorage.getItem('campusnet_session')
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved)
+          setSession(true)
+          setRole(parsed.role || 'student')
+        } catch {
+          setSession(false)
+          setRole(null)
+        }
+      } else {
+        setSession(false)
+        setRole(null)
       }
-    })
-    const auth = client.auth.onAuthStateChange((_event, next) => setSession(Boolean(next)))
+    }
+
+    syncLocalSession()
+    window.addEventListener('campusnet_auth_change', syncLocalSession)
+
+    const client = supabase
+    if (client) {
+      client.auth.getSession().then(async ({ data }) => {
+        if (data.session) {
+          setSession(true)
+          const profile = await client.from('profiles').select('role').eq('id', data.session.user.id).single()
+          setRole(profile.data?.role ?? 'student')
+        }
+      })
+      const auth = client.auth.onAuthStateChange((_event, next) => {
+        if (next) {
+          setSession(true)
+        }
+      })
+      return () => {
+        window.removeEventListener('hashchange', update)
+        window.removeEventListener('campusnet_auth_change', syncLocalSession)
+        auth.data.subscription.unsubscribe()
+      }
+    }
+
     return () => {
       window.removeEventListener('hashchange', update)
-      auth.data.subscription.unsubscribe()
+      window.removeEventListener('campusnet_auth_change', syncLocalSession)
     }
   }, [])
 
@@ -83,8 +128,8 @@ export default function App() {
     ? 'admin'
     : null
 
-  if (protectedRoute && supabase && !session) {
-    page = <LiveAuthPage go={go} />
+  if (protectedRoute && !session) {
+    page = <AuthPage go={go} />
   } else if (protectedRoute && supabase && role && requiredRole && role !== requiredRole) {
     page = <Workspace role={role} go={go} />
   } else if (section === 'search') {
@@ -118,9 +163,9 @@ export default function App() {
   } else if (section === 'admin-dashboard') {
     page = <Workspace role="admin" go={go} />
   } else if (section === 'login') {
-    page = supabase ? <LiveAuthPage go={go} /> : <AuthPage go={go} />
+    page = <AuthPage go={go} />
   } else if (section === 'register') {
-    page = supabase ? <LiveAuthPage register go={go} /> : <AuthPage register go={go} />
+    page = <AuthPage register go={go} />
   } else if (section === 'about') {
     page = <AboutPage />
   } else if (section === 'safety') {
@@ -139,7 +184,7 @@ export default function App() {
 
   return (
     <>
-      <Navbar onNavigate={go} active={section} signedIn={session} role={role} onLogout={() => { void supabase?.auth.signOut(); go('home') }} />
+      <Navbar onNavigate={go} active={section} signedIn={session} role={role} onLogout={() => { void supabase?.auth.signOut(); localStorage.removeItem('campusnet_session'); window.dispatchEvent(new Event('campusnet_auth_change')); setSession(false); setRole(null); go('home') }} />
       <main>{page}</main>
       <Footer onNavigate={go} />
     </>
