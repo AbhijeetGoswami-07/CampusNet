@@ -19,6 +19,7 @@ import {
   ProviderWorkspace,
   SafetyPage,
   SavedListingsPage,
+  SettingsPage,
   Workspace
 } from './pages'
 import { supabase } from './supabase'
@@ -117,7 +118,8 @@ export default function App() {
     'student-dashboard', 'provider-dashboard', 'admin-dashboard', 'saved-listings',
     'my-enquiries', 'my-reviews', 'profile-settings', 'my-listings', 'add-listing',
     'edit-listing', 'listing-enquiries', 'provider-profile-settings', 'pending-listings',
-    'approved-listings', 'report-management', 'user-management', 'verification-management', 'analytics'
+    'approved-listings', 'report-management', 'user-management', 'verification-management', 'analytics',
+    'settings'
   ].includes(section)
 
   const requiredRole = ['student-dashboard', 'saved-listings', 'my-enquiries', 'my-reviews', 'profile-settings'].includes(section)
@@ -172,9 +174,11 @@ export default function App() {
     page = <SafetyPage />
   } else if (section === 'saved-listings' && (!supabase || (session && role === 'student'))) {
     page = <SavedListingsPage go={go} />
-  } else if (['my-enquiries', 'my-reviews', 'profile-settings'].includes(section)) {
+  } else if (['settings', 'profile-settings', 'provider-profile-settings'].includes(section)) {
+    page = <SettingsPage role={role ?? 'student'} go={go} />
+  } else if (['my-enquiries', 'my-reviews'].includes(section)) {
     page = <ModulePage title={section.split('-').join(' ')} eyebrow="STUDENT AREA" role="student" go={go} />
-  } else if (['my-listings', 'add-listing', 'edit-listing', 'listing-enquiries', 'provider-profile-settings'].includes(section)) {
+  } else if (['my-listings', 'add-listing', 'edit-listing', 'listing-enquiries'].includes(section)) {
     page = <ModulePage title={section.split('-').join(' ')} eyebrow="PROVIDER AREA" role="provider" go={go} />
   } else if (['pending-listings', 'approved-listings', 'report-management', 'user-management', 'verification-management', 'analytics'].includes(section)) {
     page = <ModulePage title={section.split('-').join(' ')} eyebrow="ADMINISTRATION" role="admin" go={go} />

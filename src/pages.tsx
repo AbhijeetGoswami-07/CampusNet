@@ -8,8 +8,9 @@ import { ExpenseEstimatorPage } from './modules/expense'
 import { CollegesNearbyPage } from './modules/colleges'
 import { EnhancedServicesPage } from './modules/services-enhanced'
 import { FullMapPage } from './modules/map-full'
+import { SettingsPage } from './modules/settings'
 
-export { FlatmateMatchingPage, ExpenseEstimatorPage, CollegesNearbyPage, EnhancedServicesPage, FullMapPage }
+export { FlatmateMatchingPage, ExpenseEstimatorPage, CollegesNearbyPage, EnhancedServicesPage, FullMapPage, SettingsPage }
 
 export function HomePage({ go }: { go: (page: string) => void }) {
   return (
