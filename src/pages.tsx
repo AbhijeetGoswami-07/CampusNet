@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowRight, BarChart3, Building2, CheckCircle2, ClipboardList, Compass, DollarSign, FileText, Heart, Map, MapPin, Settings, ShieldCheck, UserCheck, Users, Utensils } from 'lucide-react'
+import { ArrowRight, BarChart3, Building2, CheckCircle2, ClipboardList, Compass, FileText, Heart, IndianRupee, Map, MapPin, Settings, ShieldCheck, UserCheck, Users, Utensils } from 'lucide-react'
 import { CategorySelector, ComparisonTable, CostBreakdown, EmptyState, EnquiryModal, FilterSidebar, ImageGallery, Listing, ListingCard, MapView, RatingStars, ReportListingModal, RoleBanner, SearchBar, VerificationBadge, VacancyFreshness, VacancyStatus, sampleListings } from './components'
 import { confirmVacancy, createListing, fetchListings, fetchProviderListings, fetchSaved, getListing, parseNaturalSearch, reportListing, sendEnquiry, submitReview, type ListingFilters } from './data'
 import { supabase } from './supabase'
@@ -76,7 +76,7 @@ export function HomePage({ go }: { go: (page: string) => void }) {
               <h3>Monthly Expense Estimation</h3>
               <p>Interactive student budget calculator with realistic Pune presets for rent, food, commute, utilities and leisure.</p>
             </div>
-            <span className="card-action"><DollarSign size={16} /> Calculate Budget <ArrowRight size={14} /></span>
+            <span className="card-action"><IndianRupee size={16} /> Calculate Budget <ArrowRight size={14} /></span>
           </div>
 
           <div className="module-banner-card" onClick={() => go('map')}>
