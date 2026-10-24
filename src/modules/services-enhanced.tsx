@@ -1,3 +1,4 @@
+import { GoogleMapView, type GoogleMapMarker } from '../components/google-map-view'
 import { useState } from 'react'
 import { MapPin, Phone, Clock, Star, Search, ExternalLink } from 'lucide-react'
 import { MapContainer, Marker, Popup, TileLayer, Tooltip } from 'react-leaflet'
@@ -68,6 +69,7 @@ export function EnhancedServicesPage() {
   const [activeCategory, setActiveCategory] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [showMap, setShowMap] = useState(false)
+  const [mapEngine, setMapEngine] = useState<'google' | 'leaflet'>('google')
 
   const categories = ['all', 'mess', 'laundry', 'medical', 'grocery', 'salon']
 
@@ -131,8 +133,60 @@ export function EnhancedServicesPage() {
         </div>
       </div>
 
+      {showMap && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
+          <div className="map-engine-switcher">
+            <button
+              type="button"
+              className={`map-engine-btn ${mapEngine === 'google' ? 'active' : ''}`}
+              onClick={() => setMapEngine('google')}
+              title="Google Maps JavaScript API with Satellite & Street View"
+            >
+              🗺️ Google Maps (Precise)
+            </button>
+            <button
+              type="button"
+              className={`map-engine-btn ${mapEngine === 'leaflet' ? 'active' : ''}`}
+              onClick={() => setMapEngine('leaflet')}
+              title="OpenStreetMap Standard Tiles"
+            >
+              🌍 OpenStreetMap
+            </button>
+          </div>
+        </div>
+      )}
+
       {showMap ? (
         <div className="services-map-wrap">
+          {mapEngine === 'google' ? (
+            <GoogleMapView
+              center={{ lat: mapCenter[0], lng: mapCenter[1] }}
+              zoom={13}
+              markers={filtered.map(s => {
+                const isDMart = s.name.toLowerCase().includes('dmart');
+                const isJioMart = s.name.toLowerCase().includes('jiomart') || s.name.toLowerCase().includes('smart');
+                const badgeColor = isDMart ? '#059669' : isJioMart ? '#2563eb' : '#0891b2';
+                const badgeText = isDMart ? '🛒 OFFICIAL DMART' : isJioMart ? '🛍️ JIOMART / SMART' : CATEGORY_LABELS[s.category];
+                return {
+                  id: s.id,
+                  position: { lat: s.latitude, lng: s.longitude },
+                  title: s.name,
+                  category: isDMart || isJioMart ? 'mart' : s.category,
+                  infoHtml: `
+                    <div style="font-weight: 800; color: ${badgeColor}; font-size: 11px; text-transform: uppercase;">${badgeText}</div>
+                    <div style="font-weight: 700; font-size: 14px; margin: 3px 0 2px;">${s.name}</div>
+                    <div style="color: #64748b; font-size: 12px;">${s.address}</div>
+                    <div style="color: #475569; font-size: 12px; margin: 2px 0 8px;"><strong>${s.priceRange}</strong> · ⭐ ${s.rating} · ${s.timing}</div>
+                    <div style="display: flex; gap: 6px;">
+                      <a href="tel:${s.phone}" style="background: #f1f5f9; color: #1e293b; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">📞 Call</a>
+                      <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.name}, ${s.address}, Pune`)}" target="_blank" rel="noopener noreferrer" style="background: ${badgeColor}; color: #ffffff; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Google Maps ↗</a>
+                    </div>
+                  `
+                };
+              })}
+              className="leaflet-map services-full-map"
+            />
+          ) : (
           <MapContainer center={mapCenter} zoom={13} scrollWheelZoom className="leaflet-map services-full-map">
             <TileLayer
               attribution="&copy; OpenStreetMap contributors"
@@ -168,6 +222,7 @@ export function EnhancedServicesPage() {
               </Marker>
             ))}
           </MapContainer>
+          )}
         </div>
       ) : (
         <div className="services-grid">

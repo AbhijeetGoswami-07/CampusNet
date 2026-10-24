@@ -1,3 +1,4 @@
+import { GoogleMapView, type GoogleMapMarker } from '../components/google-map-view'
 import { useState, useEffect } from 'react'
 import { Layers, ArrowRight, Search, MapPin, ExternalLink, Navigation } from 'lucide-react'
 import { MapContainer, Marker, Popup, TileLayer, Tooltip, useMap } from 'react-leaflet'
@@ -39,6 +40,7 @@ export function FullMapPage({ go }: { go: (page: string) => void }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [mapCenter, setMapCenter] = useState<LatLngExpression>([18.5204, 73.8567])
   const [mapZoom, setMapZoom] = useState(12)
+  const [mapEngine, setMapEngine] = useState<'google' | 'leaflet'>('google')
 
   const toggle = (key: keyof typeof layers) => {
     setLayers(prev => ({ ...prev, [key]: !prev[key] }))
@@ -114,6 +116,65 @@ export function FullMapPage({ go }: { go: (page: string) => void }) {
     const q = searchQuery.toLowerCase()
     return c.name.toLowerCase().includes(q) || c.shortName.toLowerCase().includes(q) || c.area.toLowerCase().includes(q)
   })
+
+  const googleMarkers: GoogleMapMarker[] = [
+    ...(layers.listings
+      ? filteredListings.map(l => ({
+          id: l.id,
+          position: { lat: l.latitude, lng: l.longitude },
+          title: l.title,
+          category: 'hostel',
+          infoHtml: `
+            <div style="font-weight: 800; color: #e67555; font-size: 11px; text-transform: uppercase;">${l.category} Accommodation</div>
+            <div style="font-weight: 700; font-size: 14px; margin: 3px 0 2px;">${l.title}</div>
+            <div style="color: #64748b; font-size: 12px;">${l.category} · ${l.roomType}</div>
+            <div style="color: #1e293b; font-weight: 700; font-size: 13px; margin: 2px 0 4px;">₹${l.price.toLocaleString('en-IN')} / month</div>
+            <div style="color: #475569; font-size: 11px; margin-bottom: 8px;">Near ${l.collegeName}</div>
+            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${l.title}, ${l.locality}, Pune`)}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background: #e67555; color: #ffffff; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Google Maps ↗</a>
+          `
+        }))
+      : []),
+    ...(layers.services
+      ? filteredServices.map(s => {
+          const isDMart = s.name.toLowerCase().includes('dmart');
+          const isJioMart = s.name.toLowerCase().includes('jiomart') || s.name.toLowerCase().includes('smart');
+          const badgeColor = isDMart ? '#059669' : isJioMart ? '#2563eb' : '#0891b2';
+          const badgeText = isDMart ? '🛒 OFFICIAL DMART' : isJioMart ? '🛍️ JIOMART / SMART' : s.category.toUpperCase();
+          return {
+            id: s.id,
+            position: { lat: s.latitude, lng: s.longitude },
+            title: s.name,
+            category: isDMart || isJioMart ? 'mart' : s.category,
+            infoHtml: `
+              <div style="font-weight: 800; color: ${badgeColor}; font-size: 11px; text-transform: uppercase;">${badgeText}</div>
+              <div style="font-weight: 700; font-size: 14px; margin: 3px 0 2px;">${s.name}</div>
+              <div style="color: #64748b; font-size: 12px;">${s.address}</div>
+              <div style="color: #475569; font-size: 12px; margin: 2px 0 8px;"><strong>${s.priceRange}</strong> · ⭐ ${s.rating} · ${s.timing}</div>
+              <div style="display: flex; gap: 6px;">
+                <a href="tel:${s.phone}" style="background: #f1f5f9; color: #1e293b; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">📞 Call</a>
+                <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.name}, ${s.address}, Pune`)}" target="_blank" rel="noopener noreferrer" style="background: ${badgeColor}; color: #ffffff; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Google Maps ↗</a>
+              </div>
+            `
+          };
+        })
+      : []),
+    ...(layers.colleges
+      ? filteredColleges.map(c => ({
+          id: c.id,
+          position: { lat: c.latitude, lng: c.longitude },
+          title: c.name,
+          category: 'college',
+          infoHtml: `
+            <div style="font-weight: 800; color: #8b5cf6; font-size: 11px; text-transform: uppercase;">University Campus</div>
+            <div style="font-weight: 700; font-size: 14px; margin: 3px 0 2px;">${c.name}</div>
+            <div style="color: #64748b; font-size: 12px;">${c.type}</div>
+            <div style="color: #475569; font-size: 12px; margin: 2px 0 8px;">${c.area}, Pune · ${c.students.toLocaleString('en-IN')} students</div>
+            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${c.name}, ${c.area}, Pune`)}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background: #8b5cf6; color: #ffffff; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">🗺️ Campus on Maps ↗</a>
+          `
+        }))
+      : [])
+  ];
+
 
   return (
     <section className="page-section" style={{ padding: '24px 32px' }}>
@@ -199,6 +260,14 @@ export function FullMapPage({ go }: { go: (page: string) => void }) {
       </div>
 
       <div className="full-map-wrap">
+        {mapEngine === 'google' ? (
+          <GoogleMapView
+            center={{ lat: (mapCenter as [number, number])[0], lng: (mapCenter as [number, number])[1] }}
+            zoom={mapZoom}
+            markers={googleMarkers}
+            className="leaflet-map full-page-map"
+          />
+        ) : (
         <MapContainer center={mapCenter} zoom={mapZoom} scrollWheelZoom className="leaflet-map full-page-map">
           <MapFlyController center={mapCenter} zoom={mapZoom} />
           <TileLayer
@@ -307,6 +376,7 @@ export function FullMapPage({ go }: { go: (page: string) => void }) {
             </Marker>
           ))}
         </MapContainer>
+        )}
       </div>
 
       <div className="map-legend">

@@ -1,3 +1,4 @@
+import { GoogleMapView, type GoogleMapMarker } from '../components/google-map-view'
 import { useState, useEffect } from 'react'
 import {
   MapPin, Users, ExternalLink, Building2, BookOpen, ArrowRight, Star, Utensils,
@@ -136,6 +137,7 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
   const [selected, setSelected] = useState<College | null>(puneColleges[0])
   // Allow choosing one option category at a time instead of dumping all at once
   const [activeTab, setActiveTab] = useState<'hostels' | 'messes' | 'laundry' | 'medical' | 'marts' | 'other_options'>('hostels')
+  const [mapEngine, setMapEngine] = useState<'google' | 'leaflet'>('google')
 
   const calcDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const dLat = (lat2 - lat1) * 111.32
@@ -179,6 +181,111 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
         .sort((a, b) => a.calcDist - b.calcDist)
     : []
   const nearbyStores = nearbyServices.filter(s => s.category === 'grocery' || s.category === 'salon')
+
+  const googleMarkers: GoogleMapMarker[] = selected
+    ? [
+        {
+          id: selected.id,
+          position: { lat: selected.latitude, lng: selected.longitude },
+          title: selected.name,
+          category: 'college',
+          infoHtml: `
+            <div style="font-weight: 800; color: #4f46e5; font-size: 11px; text-transform: uppercase;">University Campus</div>
+            <div style="font-weight: 700; font-size: 14px; margin: 3px 0 2px;">${selected.name}</div>
+            <div style="color: #64748b; font-size: 12px;">${selected.area}, Pune</div>
+            <div style="color: #475569; font-size: 12px; margin: 2px 0 8px;">${selected.students.toLocaleString('en-IN')} students</div>
+            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${selected.name}, ${selected.area}, Pune`)}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background: #4f46e5; color: #ffffff; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 600;">Open Campus in Google Maps ↗</a>
+          `
+        },
+        ...((activeTab === 'hostels' || activeTab === 'other_options')
+          ? nearbyListings.map(l => ({
+              id: l.id,
+              position: { lat: l.latitude, lng: l.longitude },
+              title: l.title,
+              category: 'hostel',
+              infoHtml: `
+                <div style="font-weight: 800; color: #e67555; font-size: 11px; text-transform: uppercase;">${l.category} Accommodation</div>
+                <div style="font-weight: 700; font-size: 14px; margin: 3px 0 2px;">${l.title}</div>
+                <div style="color: #64748b; font-size: 12px;">${l.roomType} · ₹${l.price.toLocaleString('en-IN')}/mo</div>
+                <div style="color: #059669; font-weight: 600; font-size: 12px; margin: 2px 0 8px;">${l.calcDist.toFixed(1)} km from ${selected.shortName}</div>
+                <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${l.title}, ${l.locality}, Pune`)}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background: #e67555; color: #ffffff; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Google Maps ↗</a>
+              `
+            }))
+          : []),
+        ...((activeTab === 'messes' || activeTab === 'other_options')
+          ? nearbyMesses.map(m => ({
+              id: m.id,
+              position: { lat: m.latitude, lng: m.longitude },
+              title: m.name,
+              category: 'mess',
+              infoHtml: `
+                <div style="font-weight: 800; color: #d97706; font-size: 11px; text-transform: uppercase;">Mess & Tiffin</div>
+                <div style="font-weight: 700; font-size: 14px; margin: 3px 0 2px;">${m.name}</div>
+                <div style="color: #64748b; font-size: 12px;">${m.priceRange} · ${m.address}</div>
+                <div style="color: #475569; font-size: 12px; margin: 2px 0 8px;"><strong>${m.calcDist.toFixed(1)} km</strong> from ${selected.shortName}</div>
+                <div style="display: flex; gap: 6px;">
+                  <a href="tel:${m.phone}" style="background: #f1f5f9; color: #1e293b; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">📞 Call</a>
+                  <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${m.name}, ${m.address}, Pune`)}" target="_blank" rel="noopener noreferrer" style="background: #d97706; color: #ffffff; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Google Maps ↗</a>
+                </div>
+              `
+            }))
+          : []),
+        ...((activeTab === 'laundry' || activeTab === 'other_options')
+          ? nearbyLaundry.map(s => ({
+              id: s.id,
+              position: { lat: s.latitude, lng: s.longitude },
+              title: s.name,
+              category: 'laundry',
+              infoHtml: `
+                <div style="font-weight: 800; color: #0891b2; font-size: 11px; text-transform: uppercase;">Laundromat</div>
+                <div style="font-weight: 700; font-size: 14px; margin: 3px 0 2px;">${s.name}</div>
+                <div style="color: #64748b; font-size: 12px;">${s.priceRange} · ${s.address}</div>
+                <div style="color: #475569; font-size: 12px; margin: 2px 0 8px;"><strong>${s.calcDist.toFixed(1)} km</strong> from ${selected.shortName}</div>
+                <div style="display: flex; gap: 6px;">
+                  <a href="tel:${s.phone}" style="background: #f1f5f9; color: #1e293b; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">📞 Call</a>
+                  <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.name}, ${s.address}, Pune`)}" target="_blank" rel="noopener noreferrer" style="background: #0891b2; color: #ffffff; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Google Maps ↗</a>
+                </div>
+              `
+            }))
+          : []),
+        ...((activeTab === 'medical' || activeTab === 'other_options')
+          ? nearbyMedical.map(s => ({
+              id: s.id,
+              position: { lat: s.latitude, lng: s.longitude },
+              title: s.name,
+              category: 'medical',
+              infoHtml: `
+                <div style="font-weight: 800; color: #dc2626; font-size: 11px; text-transform: uppercase;">Medical & Emergency</div>
+                <div style="font-weight: 700; font-size: 14px; margin: 3px 0 2px;">${s.name}</div>
+                <div style="color: #64748b; font-size: 12px;">${s.priceRange} · ${s.timing}</div>
+                <div style="color: #475569; font-size: 12px; margin: 2px 0 8px;"><strong>${s.calcDist.toFixed(1)} km</strong> from ${selected.shortName}</div>
+                <div style="display: flex; gap: 6px;">
+                  <a href="tel:${s.phone}" style="background: #dc2626; color: #ffffff; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">📞 Emergency Call</a>
+                  <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.name}, ${s.address}, Pune`)}" target="_blank" rel="noopener noreferrer" style="background: #f1f5f9; color: #1e293b; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Google Maps ↗</a>
+                </div>
+              `
+            }))
+          : []),
+        ...((activeTab === 'marts' || activeTab === 'other_options')
+          ? nearbyMarts.map(s => ({
+              id: s.id,
+              position: { lat: s.latitude, lng: s.longitude },
+              title: s.name,
+              category: 'mart',
+              infoHtml: `
+                <div style="font-weight: 800; color: #16a34a; font-size: 11px; text-transform: uppercase;">Supermarket / Mart</div>
+                <div style="font-weight: 700; font-size: 14px; margin: 3px 0 2px;">${s.name}</div>
+                <div style="color: #64748b; font-size: 12px;">${s.address}</div>
+                <div style="color: #475569; font-size: 12px; margin: 2px 0 8px;"><strong>${s.calcDist.toFixed(1)} km</strong> from ${selected.shortName} · ${s.timing}</div>
+                <div style="display: flex; gap: 6px;">
+                  <a href="tel:${s.phone}" style="background: #f1f5f9; color: #1e293b; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">📞 Call</a>
+                  <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${s.name}, ${s.address}, Pune`)}" target="_blank" rel="noopener noreferrer" style="background: #16a34a; color: #ffffff; padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600;">Google Maps ↗</a>
+                </div>
+              `
+            }))
+          : [])
+      ]
+    : []
 
   const mapCenter: LatLngExpression = selected
     ? [selected.latitude, selected.longitude]
@@ -290,7 +397,8 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
             </div>
 
             {/* Visual Icon Legend */}
-            <div className="college-map-legend">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 10 }}>
+              <div className="college-map-legend" style={{ margin: 0 }}>
               <span className="legend-chip legend-college">
                 <span className="legend-icon-badge badge-college">
                   <GraduationCap size={13} color="#ffffff" />
@@ -323,7 +431,41 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
               </span>
             </div>
 
+            <div className="map-engine-switcher">
+              <button
+                type="button"
+                className={`map-engine-btn ${mapEngine === 'google' ? 'active' : ''}`}
+                onClick={() => setMapEngine('google')}
+                title="Google Maps JavaScript API with Satellite & Street View"
+              >
+                🗺️ Google Maps (Precise)
+              </button>
+              <button
+                type="button"
+                className={`map-engine-btn ${mapEngine === 'leaflet' ? 'active' : ''}`}
+                onClick={() => setMapEngine('leaflet')}
+                title="OpenStreetMap Standard Tiles"
+              >
+                🌍 OpenStreetMap
+              </button>
+            </div>
+          </div>
+
             <div className="nearby-map-wrap">
+              {mapEngine === 'google' ? (
+                <GoogleMapView
+                  center={{ lat: selected.latitude, lng: selected.longitude }}
+                  zoom={14}
+                  circle={{
+                    center: { lat: selected.latitude, lng: selected.longitude },
+                    radius: 2000,
+                    strokeColor: '#4f46e5',
+                    fillColor: '#6366f1'
+                  }}
+                  markers={googleMarkers}
+                  className="leaflet-map"
+                />
+              ) : (
               <MapContainer center={mapCenter} zoom={14} scrollWheelZoom className="leaflet-map">
                 <MapFlyController center={[selected.latitude, selected.longitude]} zoom={14} />
                 <TileLayer
@@ -531,6 +673,7 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
                   );
                 })}
               </MapContainer>
+              )}
             </div>
 
             {/* Content Area - Displays One Category Cleanly Instead of Everything at the Same Time */}
