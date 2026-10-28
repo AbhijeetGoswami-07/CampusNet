@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import type { Listing } from './components'
+import { puneListings } from './data-pune'
 
 export type ListingFilters = { query?: string; category?: string; collegeName?: string; maxRent?: number; maxTotal?: number; maxDistance?: number; roomType?: string; gender?: string; food?: boolean; laundry?: boolean; wifi?: boolean; minAvailable?: number; recentlyVerified?: boolean; sort?: 'cost' | 'distance' | 'rating' | 'updated' }
 export type NaturalSearchFilters = Pick<ListingFilters, 'category' | 'collegeName' | 'maxTotal' | 'maxDistance' | 'gender' | 'food' | 'laundry' | 'wifi'>
@@ -31,11 +32,132 @@ export async function fetchProviderListings() { const client = requireSupabase()
 export async function suspendListing(id: string) { const client = requireSupabase(); const { error } = await client.from('listings').update({ status: 'suspended' }).eq('id', id); if (error) throw error }
 export async function uploadListingImages(listingId: string, files: File[]) { const client = requireSupabase(); const { data: user } = await client.auth.getUser(); if (!user.user) throw new Error('Sign in required.'); for (const file of files) { if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('Images must be JPG, PNG, or WebP.'); if (file.size > 5 * 1024 * 1024) throw new Error('Each image must be 5 MB or smaller.'); const path = `${user.user.id}/${listingId}/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '')}`; const { error: uploadError } = await client.storage.from('listing-images').upload(path, file, { upsert: false, contentType: file.type }); if (uploadError) throw uploadError; const { data: url } = client.storage.from('listing-images').getPublicUrl(path); const { error: rowError } = await client.from('listing_images').insert({ listing_id: listingId, image_url: url.publicUrl, storage_path: path }); if (rowError) throw rowError } }
 export async function removeListingImage(imageId: string, path: string) { const client = requireSupabase(); const { error: storageError } = await client.storage.from('listing-images').remove([path]); if (storageError) throw storageError; const { error } = await client.from('listing_images').delete().eq('id', imageId); if (error) throw error }
-export async function toggleSaved(listingId: string, saved: boolean) { const client = requireSupabase(); const { data: user } = await client.auth.getUser(); if (!user.user) throw new Error('Sign in as a student to save listings.'); const result = saved ? await client.from('saved_listings').delete().match({ student_id: user.user.id, listing_id: listingId }) : await client.from('saved_listings').insert({ student_id: user.user.id, listing_id: listingId }); if (result.error) throw result.error }
-export async function fetchSaved() { const client = requireSupabase(); const { data: user } = await client.auth.getUser(); if (!user.user) return []; const { data, error } = await client.from('saved_listings').select('listing_id, listings(*, listing_images(image_url,is_primary))').eq('student_id', user.user.id); if (error) throw error; return (data ?? []).map((row: any) => mapListing(row.listings)) }
-export async function sendEnquiry(listingId: string, message: string, contactPreference: string) { const client = requireSupabase(); const { data: user } = await client.auth.getUser(); if (!user.user) throw new Error('Sign in as a student to enquire.'); const { error } = await client.from('enquiries').insert({ listing_id: listingId, student_id: user.user.id, message, contact_preference: contactPreference }); if (error) throw error }
-export async function submitReview(listingId: string, rating: number, comment: string) { const client = requireSupabase(); const { data: user } = await client.auth.getUser(); if (!user.user) throw new Error('Sign in as a student to review.'); const { error } = await client.from('reviews').insert({ listing_id: listingId, student_id: user.user.id, rating, comment }); if (error) throw error }
+export async function toggleSaved(listingId: string, saved: boolean): Promise<string[]> {
+  let savedIds: string[] = []
+  try {
+    const raw = localStorage.getItem('campusnet_saved_listings') || '[]'
+    savedIds = JSON.parse(raw)
+  } catch {}
+
+  if (saved) {
+    savedIds = savedIds.filter(id => id !== listingId)
+  } else {
+    if (!savedIds.includes(listingId)) {
+      savedIds.push(listingId)
+    }
+  }
+  localStorage.setItem('campusnet_saved_listings', JSON.stringify(savedIds))
+  window.dispatchEvent(new Event('campusnet_saved_change'))
+
+  if (supabase) {
+    try {
+      const { data: user } = await supabase.auth.getUser()
+      if (user?.user) {
+        if (saved) {
+          await supabase.from('saved_listings').delete().match({ student_id: user.user.id, listing_id: listingId })
+        } else {
+          await supabase.from('saved_listings').insert({ student_id: user.user.id, listing_id: listingId })
+        }
+      }
+    } catch {}
+  }
+  return savedIds
+}
+export async function fetchSaved(): Promise<Listing[]> {
+  if (supabase) {
+    try {
+      const { data: user } = await supabase.auth.getUser()
+      if (user?.user) {
+        const { data, error } = await supabase.from('saved_listings').select('listing_id, listings(*, listing_images(image_url,is_primary))').eq('student_id', user.user.id)
+        if (!error && data && data.length > 0) {
+          return data.map((row: any) => mapListing(row.listings))
+        }
+      }
+    } catch {}
+  }
+
+  try {
+    const raw = localStorage.getItem('campusnet_saved_listings') || '[]'
+    const savedIds: string[] = JSON.parse(raw)
+    return (puneListings as Listing[]).filter(item => savedIds.includes(item.id))
+  } catch {
+    return []
+  }
+}
+export async function sendEnquiry(listingId: string, message: string, contactPreference: string) {
+  const listing = (puneListings as Listing[]).find(l => l.id === listingId)
+  const title = listing?.title || 'Listing ' + listingId
+  const locality = listing?.locality || 'Pune'
+  const city = listing?.city || 'Pune'
+
+  try {
+    const raw = localStorage.getItem('campusnet_enquiries') || '[]'
+    const list = JSON.parse(raw)
+    list.unshift({
+      id: 'enq_' + Date.now(),
+      listing_id: listingId,
+      message,
+      contactPreference,
+      status: 'new',
+      created_at: new Date().toISOString(),
+      listings: { title, locality, city }
+    })
+    localStorage.setItem('campusnet_enquiries', JSON.stringify(list))
+    window.dispatchEvent(new Event('campusnet_enquiry_change'))
+  } catch {}
+
+  if (supabase) {
+    try {
+      const { data: user } = await supabase.auth.getUser()
+      if (user?.user) {
+        await supabase.from('enquiries').insert({ listing_id: listingId, student_id: user.user.id, message, contact_preference: contactPreference })
+      }
+    } catch {}
+  }
+}
+export async function submitReview(listingId: string, rating: number, comment: string) {
+  const listing = (puneListings as Listing[]).find(l => l.id === listingId)
+  try {
+    const raw = localStorage.getItem('campusnet_reviews') || '[]'
+    const list = JSON.parse(raw)
+    list.unshift({
+      id: 'rev_' + Date.now(),
+      listing_id: listingId,
+      listing_title: listing?.title || 'Listing ' + listingId,
+      rating,
+      comment,
+      created_at: new Date().toISOString()
+    })
+    localStorage.setItem('campusnet_reviews', JSON.stringify(list))
+    window.dispatchEvent(new Event('campusnet_review_change'))
+  } catch {}
+
+  if (supabase) {
+    try {
+      const { data: user } = await supabase.auth.getUser()
+      if (user?.user) {
+        await supabase.from('reviews').insert({ listing_id: listingId, student_id: user.user.id, rating, comment })
+      }
+    } catch {}
+  }
+}
 export async function reportListing(listingId: string, reason: string, description: string) { const client = requireSupabase(); const { data: user } = await client.auth.getUser(); if (!user.user) throw new Error('Sign in to report a listing.'); const { error } = await client.from('reports').insert({ listing_id: listingId, reporter_id: user.user.id, reason, description }); if (error) throw error }
-export async function fetchMyEnquiries() { const client = requireSupabase(); const { data: user } = await client.auth.getUser(); if (!user.user) return []; const { data, error } = await client.from('enquiries').select('id,message,status,created_at,listing_id,listings(title,locality,city)').eq('student_id', user.user.id).order('created_at', { ascending: false }); if (error) throw error; return data ?? [] }
+export async function fetchMyEnquiries() {
+  if (supabase) {
+    try {
+      const { data: user } = await supabase.auth.getUser()
+      if (user?.user) {
+        const { data, error } = await supabase.from('enquiries').select('id,message,status,created_at,listing_id,listings(title,locality,city)').eq('student_id', user.user.id).order('created_at', { ascending: false })
+        if (!error && data && data.length > 0) return data
+      }
+    } catch {}
+  }
+  try {
+    const raw = localStorage.getItem('campusnet_enquiries') || '[]'
+    return JSON.parse(raw)
+  } catch {
+    return []
+  }
+}
 export async function fetchProviderEnquiries() { const client = requireSupabase(); const { data: user } = await client.auth.getUser(); if (!user.user) return []; const { data, error } = await client.from('enquiries').select('id,message,status,created_at,listing_id,student_id,listings!inner(title)').eq('listings.owner_id', user.user.id).order('created_at', { ascending: false }); if (error) throw error; return data ?? [] }
 export async function updateEnquiryStatus(id: string, status: 'new' | 'contacted' | 'closed') { const client = requireSupabase(); const { error } = await client.from('enquiries').update({ status }).eq('id', id); if (error) throw error }

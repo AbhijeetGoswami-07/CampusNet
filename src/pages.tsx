@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowRight, BarChart3, Building2, CheckCircle2, ClipboardList, Compass, FileText, Heart, IndianRupee, Map, MapPin, Settings, ShieldCheck, UserCheck, Users, Utensils } from 'lucide-react'
+import { ArrowRight, BarChart3, Building2, CheckCircle2, ClipboardList, Compass, FileText, Heart, IndianRupee, Map, MapPin, MessageSquare, Settings, ShieldCheck, Star, UserCheck, Users, Utensils } from 'lucide-react'
 import { CategorySelector, ComparisonTable, CostBreakdown, EmptyState, EnquiryModal, FilterSidebar, ImageGallery, Listing, ListingCard, MapView, RatingStars, ReportListingModal, RoleBanner, SearchBar, VerificationBadge, VacancyFreshness, VacancyStatus, sampleListings } from './components'
-import { confirmVacancy, createListing, fetchListings, fetchProviderListings, fetchSaved, getListing, parseNaturalSearch, reportListing, sendEnquiry, submitReview, type ListingFilters } from './data'
+import { confirmVacancy, createListing, fetchListings, fetchMyEnquiries, fetchProviderListings, fetchSaved, getListing, parseNaturalSearch, reportListing, sendEnquiry, submitReview, toggleSaved, type ListingFilters } from './data'
 import { supabase } from './supabase'
 import { FlatmateMatchingPage } from './modules/flatmates'
 import { ExpenseEstimatorPage } from './modules/expense'
@@ -146,7 +146,14 @@ export function ListingPage({ id, go }: { id: string; go: (page: string) => void
   const listing = sampleListings.find((item) => item.id === id) ?? sampleListings[0]
   const [enquiry, setEnquiry] = useState(false)
   const [report, setReport] = useState(false)
-  const [saved, setSaved] = useState(false)
+  const [saved, setSaved] = useState(() => {
+    try {
+      const raw = localStorage.getItem('campusnet_saved_listings')
+      return raw ? JSON.parse(raw).includes(id) : false
+    } catch {
+      return false
+    }
+  })
 
   const googleMapsUrl = `https://www.google.com/maps?q=${listing.latitude},${listing.longitude}+(${encodeURIComponent(
     listing.title
@@ -167,7 +174,10 @@ export function ListingPage({ id, go }: { id: string; go: (page: string) => void
           </a>
           <button
             className={`save-control ${saved ? 'saved' : ''}`}
-            onClick={() => setSaved(!saved)}
+            onClick={() => {
+              void toggleSaved(listing.id, saved)
+              setSaved(!saved)
+            }}
             aria-label="Save listing"
           >
             <Heart size={20} fill={saved ? 'currentColor' : 'none'} />
@@ -250,7 +260,7 @@ export function ListingPage({ id, go }: { id: string; go: (page: string) => void
         </aside>
       </div>
 
-      {enquiry && <EnquiryModal listing={listing} onClose={() => setEnquiry(false)} />}
+      {enquiry && <EnquiryModal listing={listing} onClose={() => setEnquiry(false)} onSend={async (text) => { await sendEnquiry(listing.id, text, 'email') }} />}
       {report && <ReportListingModal onClose={() => setReport(false)} />}
     </section>
   )
@@ -258,7 +268,149 @@ export function ListingPage({ id, go }: { id: string; go: (page: string) => void
 
 export function ProviderProfilePage({ go }: { go: (page: string) => void }) { return <section className="page-section"><div className="profile-header"><div className="profile-avatar">OH</div><div><VerificationBadge /><h1>Olive House Living</h1><p>Verified provider · Bengaluru · Responds within 2 hours</p></div></div><div className="provider-layout"><div><h2>About this provider</h2><p>We create calm, well-maintained homes for students and working professionals. Every space is photographed and availability is confirmed regularly.</p><h2>Current listings</h2>{sampleListings.slice(0, 2).map((listing) => <ListingCard key={listing.id} listing={listing} onOpen={() => go(`listing/${listing.id}`)} />)}</div><aside className="profile-facts"><RatingStars /><span>Member since 2023</span><span><ShieldCheck size={16} /> Identity verified</span><span><CheckCircle2 size={16} /> 18 successful stays</span></aside></div></section> }
 
-export function Workspace({ role, go }: { role: 'student' | 'provider' | 'admin'; go: (page: string) => void }) { const isStudent = role === 'student'; const cards = isStudent ? [['Saved listings', '3 homes saved', Heart], ['My enquiries', '2 active enquiries', FileText], ['My reviews', 'Share your experience', RatingStars]] : role === 'provider' ? [['My listings', '3 active listings', Building2], ['Listing enquiries', '5 awaiting reply', ClipboardList], ['Confirm vacancy', 'Keep availability fresh', CheckCircle2]] : [['Pending listings', '8 awaiting review', ClipboardList], ['Open reports', '4 reports to resolve', ShieldCheck], ['Platform users', '1,204 registered users', Users]]; return <section className="page-section workspace"><RoleBanner role={role} /><div className="workspace-heading"><div><p className="eyebrow">{role.toUpperCase()} WORKSPACE</p><h1>{isStudent ? 'Your next move, in one place.' : role === 'provider' ? 'Keep your listings trustworthy.' : 'Keep CampusNest dependable.'}</h1></div><button className="outline-button" onClick={() => go('settings')}><Settings size={16} /> Settings</button></div><div className="workspace-cards">{cards.map(([title, text, Icon]) => <button key={title as string} className="workspace-card" onClick={() => go((title as string).toLowerCase().split(' ').join('-'))}><span><Icon size={21} /><strong>{title as string}</strong><small>{text as string}</small></span><ArrowRight size={17} /></button>)}</div><div className="workspace-panel"><h2>{role === 'admin' ? 'Moderation queue' : role === 'provider' ? 'Your listings' : 'Recent activity'}</h2>{role === 'student' ? <EmptyState title="No recent activity" text="Save a home or send an enquiry to see it here." /> : sampleListings.map((listing) => <div className="activity-row" key={listing.id}><span>{listing.title}</span><VerificationBadge /><small>{role === 'admin' ? 'Awaiting review' : 'Updated today'}</small></div>)}</div></section> }
+export function Workspace({ role, go }: { role: 'student' | 'provider' | 'admin'; go: (page: string) => void }) {
+  const isStudent = role === 'student';
+  const [savedCount, setSavedCount] = useState<number>(() => {
+    try {
+      const raw = localStorage.getItem('campusnet_saved_listings');
+      return raw ? JSON.parse(raw).length : 0;
+    } catch {
+      return 0;
+    }
+  });
+  const [enquiryCount, setEnquiryCount] = useState<number>(() => {
+    try {
+      const raw = localStorage.getItem('campusnet_enquiries');
+      return raw ? JSON.parse(raw).length : 0;
+    } catch {
+      return 0;
+    }
+  });
+  const [reviewCount, setReviewCount] = useState<number>(() => {
+    try {
+      const raw = localStorage.getItem('campusnet_reviews');
+      return raw ? JSON.parse(raw).length : 0;
+    } catch {
+      return 0;
+    }
+  });
+
+  useEffect(() => {
+    const updateCounts = () => {
+      try {
+        const rawSaved = localStorage.getItem('campusnet_saved_listings');
+        setSavedCount(rawSaved ? JSON.parse(rawSaved).length : 0);
+        const rawEnq = localStorage.getItem('campusnet_enquiries');
+        setEnquiryCount(rawEnq ? JSON.parse(rawEnq).length : 0);
+        const rawRev = localStorage.getItem('campusnet_reviews');
+        setReviewCount(rawRev ? JSON.parse(rawRev).length : 0);
+      } catch {}
+    };
+    updateCounts();
+    window.addEventListener('campusnet_saved_change', updateCounts);
+    window.addEventListener('campusnet_enquiry_change', updateCounts);
+    window.addEventListener('campusnet_review_change', updateCounts);
+    return () => {
+      window.removeEventListener('campusnet_saved_change', updateCounts);
+      window.removeEventListener('campusnet_enquiry_change', updateCounts);
+      window.removeEventListener('campusnet_review_change', updateCounts);
+    };
+  }, []);
+
+  const cards = isStudent
+    ? [
+        [
+          'Saved listings',
+          savedCount === 0 ? 'No homes saved yet' : `${savedCount} home${savedCount === 1 ? '' : 's'} saved`,
+          Heart
+        ],
+        [
+          'My enquiries',
+          enquiryCount === 0 ? 'No active enquiries' : `${enquiryCount} active enquir${enquiryCount === 1 ? 'y' : 'ies'}`,
+          FileText
+        ],
+        [
+          'My reviews',
+          reviewCount === 0 ? 'No reviews yet' : `${reviewCount} review${reviewCount === 1 ? '' : 's'} shared`,
+          Star
+        ]
+      ]
+    : role === 'provider'
+    ? [
+        ['My listings', '3 active listings', Building2],
+        ['Listing enquiries', '5 awaiting reply', ClipboardList],
+        ['Confirm vacancy', 'Keep availability fresh', CheckCircle2]
+      ]
+    : [
+        ['Pending listings', '8 awaiting review', ClipboardList],
+        ['Open reports', '4 reports to resolve', ShieldCheck],
+        ['Platform users', '1,204 registered users', Users]
+      ];
+
+  return (
+    <section className="page-section workspace">
+      <RoleBanner role={role} />
+      <div className="workspace-heading">
+        <div>
+          <p className="eyebrow">{role.toUpperCase()} WORKSPACE</p>
+          <h1>{isStudent ? 'Your next move, in one place.' : role === 'provider' ? 'Keep your listings trustworthy.' : 'Keep CampusNest dependable.'}</h1>
+        </div>
+        <button className="outline-button" onClick={() => go('settings')}>
+          <Settings size={16} /> Settings
+        </button>
+      </div>
+      <div className="workspace-cards">
+        {cards.map(([title, text, Icon]) => (
+          <button
+            key={title as string}
+            className="workspace-card"
+            onClick={() => go((title as string).toLowerCase().split(' ').join('-'))}
+          >
+            <span>
+              <Icon size={21} />
+              <strong>{title as string}</strong>
+              <small>{text as string}</small>
+            </span>
+            <ArrowRight size={17} />
+          </button>
+        ))}
+      </div>
+      <div className="workspace-panel">
+        <h2>{role === 'admin' ? 'Moderation queue' : role === 'provider' ? 'Your listings' : 'Recent activity'}</h2>
+        {role === 'student' ? (
+          savedCount === 0 && enquiryCount === 0 ? (
+            <EmptyState title="No recent activity" text="Save a home or send an enquiry to see it here." />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {savedCount > 0 && (
+                <div className="activity-row">
+                  <span><b>Saved Homes Shortlist</b>: {savedCount} place{savedCount === 1 ? '' : 's'} saved</span>
+                  <button className="text-action" onClick={() => go('saved-listings')}>View saved <ArrowRight size={13} /></button>
+                  <small>Active shortlist</small>
+                </div>
+              )}
+              {enquiryCount > 0 && (
+                <div className="activity-row">
+                  <span><b>Sent Enquiries</b>: {enquiryCount} enquiry message{enquiryCount === 1 ? '' : 's'}</span>
+                  <button className="text-action" onClick={() => go('my-enquiries')}>View enquiries <ArrowRight size={13} /></button>
+                  <small>Pending replies</small>
+                </div>
+              )}
+            </div>
+          )
+        ) : (
+          sampleListings.map((listing) => (
+            <div className="activity-row" key={listing.id}>
+              <span>{listing.title}</span>
+              <VerificationBadge />
+              <small>{role === 'admin' ? 'Awaiting review' : 'Updated today'}</small>
+            </div>
+          ))
+        )}
+      </div>
+    </section>
+  );
+}
 
 export function AuthPage({ register: initialRegister, go }: { register?: boolean; go: (page: string) => void }) {
   const [isRegister, setIsRegister] = useState(Boolean(initialRegister));
@@ -663,7 +815,161 @@ export function AboutPage() { return <InfoPage title="A better way to find where
 export function SafetyPage() { return <InfoPage title="Keep the move safe." eyebrow="SAFETY GUIDELINES"><p>Meet providers in public first, verify the address yourself, and never send money before seeing the place and confirming the agreement. CampusNest does not process payments.</p><div className="info-points"><span><ShieldCheck /> Never share OTPs or passwords</span><span><ShieldCheck /> Report suspicious or outdated listings</span><span><ShieldCheck /> Use enquiries to keep a clear record</span></div></InfoPage> }
 function InfoPage({ title, eyebrow, children }: { title: string; eyebrow: string; children: React.ReactNode }) { return <section className="info-page"><p className="eyebrow">{eyebrow}</p><h1>{title}</h1>{children}</section> }
 
-export function ModulePage({ title, eyebrow, role, go }: { title: string; eyebrow: string; role: 'student' | 'provider' | 'admin'; go: (page: string) => void }) { return <section className="page-section workspace"><RoleBanner role={role} /><div className="workspace-heading"><div><p className="eyebrow">{eyebrow}</p><h1>{title}</h1></div><button className="outline-button" onClick={() => go(`${role}-dashboard`)}>Back to dashboard</button></div><div className="workspace-panel"><div className="module-toolbar"><SearchBar /><button className="solid-button">Add new <ArrowRight size={15} /></button></div>{role === 'student' ? <EmptyState title="Your data will appear here" text="This private workspace is ready for Supabase-backed records." /> : sampleListings.map((listing) => <div className="activity-row" key={listing.id}><span><b>{listing.title}</b><small>{listing.locality}, {listing.city}</small></span><VacancyStatus available={listing.available} total={listing.total} /><VerificationBadge /></div>)}</div></section> }
+export function ModulePage({ title, eyebrow, role, go }: { title: string; eyebrow: string; role: 'student' | 'provider' | 'admin'; go: (page: string) => void }) {
+  const isEnquiries = title.toLowerCase().includes('enquir');
+  const isReviews = title.toLowerCase().includes('review');
+
+  const [enquiries, setEnquiries] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (role === 'student') {
+      if (isEnquiries) {
+        void fetchMyEnquiries().then((res) => {
+          setEnquiries(res);
+          setLoading(false);
+        }).catch(() => {
+          setEnquiries([]);
+          setLoading(false);
+        });
+      } else if (isReviews) {
+        try {
+          const raw = localStorage.getItem('campusnet_reviews') || '[]';
+          setReviews(JSON.parse(raw));
+        } catch {
+          setReviews([]);
+        }
+        setLoading(false);
+      } else {
+        setLoading(false);
+      }
+    } else {
+      setLoading(false);
+    }
+  }, [role, isEnquiries, isReviews]);
+
+  return (
+    <section className="page-section workspace">
+      <RoleBanner role={role} />
+      <div className="workspace-heading">
+        <div>
+          <p className="eyebrow">{eyebrow}</p>
+          <h1 style={{ textTransform: 'capitalize' }}>{title}</h1>
+        </div>
+        <button className="outline-button" onClick={() => go(`${role}-dashboard`)}>
+          Back to dashboard
+        </button>
+      </div>
+
+      <div className="workspace-panel">
+        {role === 'student' ? (
+          loading ? (
+            <div className="loading-state">Loading your records...</div>
+          ) : isEnquiries ? (
+            enquiries.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {enquiries.map((enq) => (
+                  <div key={enq.id} className="activity-row" style={{ gridTemplateColumns: '1fr auto auto' }}>
+                    <div>
+                      <strong style={{ fontSize: 14, color: '#183d3b' }}>
+                        {enq.listings?.title || `Enquiry for Listing ${enq.listing_id}`}
+                      </strong>
+                      <p style={{ margin: '4px 0 0', fontSize: 12, color: '#71817d' }}>"{enq.message}"</p>
+                      <small style={{ color: '#9aa7a3', fontSize: 10 }}>
+                        {new Date(enq.created_at).toLocaleDateString()} · {enq.listings?.locality || 'Pune'}
+                      </small>
+                    </div>
+                    <span className="verification-badge" style={{ textTransform: 'capitalize' }}>
+                      {enq.status || 'Active'}
+                    </span>
+                    <button
+                      className="outline-button"
+                      style={{ padding: '6px 12px', fontSize: 11 }}
+                      onClick={() => go(`listing/${enq.listing_id}`)}
+                    >
+                      View Home
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '30px 20px 40px' }}>
+                <EmptyState
+                  title="No active enquiries yet"
+                  text="You haven't contacted any property providers yet. Browse verified student housing across Pune and send an enquiry to chat with landlords."
+                />
+                <button
+                  className="solid-button"
+                  onClick={() => go('search')}
+                  style={{ margin: '15px auto 0', display: 'inline-flex' }}
+                >
+                  Find homes to enquire <ArrowRight size={15} />
+                </button>
+              </div>
+            )
+          ) : isReviews ? (
+            reviews.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {reviews.map((rev) => (
+                  <div key={rev.id} className="activity-row" style={{ gridTemplateColumns: '1fr auto auto' }}>
+                    <div>
+                      <strong style={{ fontSize: 14, color: '#183d3b' }}>{rev.listing_title}</strong>
+                      <p style={{ margin: '4px 0 0', fontSize: 12, color: '#71817d' }}>"{rev.comment}"</p>
+                      <small style={{ color: '#9aa7a3', fontSize: 10 }}>
+                        {new Date(rev.created_at).toLocaleDateString()}
+                      </small>
+                    </div>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#e39b48' }}>
+                      ⭐ {rev.rating} / 5
+                    </span>
+                    <button
+                      className="outline-button"
+                      style={{ padding: '6px 12px', fontSize: 11 }}
+                      onClick={() => go(`listing/${rev.listing_id}`)}
+                    >
+                      View Home
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '30px 20px 40px' }}>
+                <EmptyState
+                  title="No reviews submitted yet"
+                  text="You haven't written any reviews yet. Share your experience with verified student accommodations in Pune to help your peers make confident choices."
+                />
+                <button
+                  className="solid-button"
+                  onClick={() => go('search')}
+                  style={{ margin: '15px auto 0', display: 'inline-flex' }}
+                >
+                  Find accommodations to review <ArrowRight size={15} />
+                </button>
+              </div>
+            )
+          ) : (
+            <EmptyState
+              title="Your data will appear here"
+              text="This private workspace is ready for your student records."
+            />
+          )
+        ) : (
+          sampleListings.map((listing) => (
+            <div className="activity-row" key={listing.id}>
+              <span>
+                <b>{listing.title}</b>
+                <small>{listing.locality}, {listing.city}</small>
+              </span>
+              <VacancyStatus available={listing.available} total={listing.total} />
+              <VerificationBadge />
+            </div>
+          ))
+        )}
+      </div>
+    </section>
+  );
+}
 
 export function LiveSearchPage({ go }: { go: (page: string) => void }) { const [query, setQuery] = useState(''); const [listings, setListings] = useState<Listing[]>([]); const [error, setError] = useState(''); const [loading, setLoading] = useState(false); const runSearch = async (value = query) => { setLoading(true); setError(''); try { setListings(await fetchListings({ query: value, sort: 'updated' })) } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not load listings.'); setListings([]) } finally { setLoading(false) } }; useEffect(() => { if (supabase) void runSearch('') }, []); const visible = supabase ? listings : sampleListings; return <section className="page-section"><div className="page-heading"><div><p className="eyebrow">SEARCH RESULTS</p><h1>Homes near your next destination</h1><p>{supabase ? `${listings.length} verified places match your search.` : 'Development preview listings. Connect Supabase for live results.'}</p></div></div><SearchBar onSearch={(value) => { setQuery(value); void runSearch(value) }} /><CategorySelector onSelect={(category) => { const value = category === 'All homes' ? '' : category.slice(0, -1).toLowerCase(); setQuery(value); void runSearch(value) }} /><div className="search-layout"><FilterSidebar onApply={() => void runSearch()} /><div className="result-stack">{loading ? <div className="loading-state">Loading verified listings...</div> : error ? <div className="error-state"><p>{error}</p></div> : visible.map((listing) => <ListingCard key={listing.id} listing={listing} onOpen={() => go(`listing/${listing.id}`)} />)}</div></div></section> }
 
@@ -671,7 +977,14 @@ export function LiveListingPage({ id, go }: { id: string; go: (page: string) => 
   const [listing, setListing] = useState<Listing | null>(null)
   const [enquiry, setEnquiry] = useState(false)
   const [report, setReport] = useState(false)
-  const [saved, setSaved] = useState(false)
+  const [saved, setSaved] = useState(() => {
+    try {
+      const raw = localStorage.getItem('campusnet_saved_listings')
+      return raw ? JSON.parse(raw).includes(id) : false
+    } catch {
+      return false
+    }
+  })
   const [message, setMessage] = useState('')
 
   useEffect(() => {
@@ -703,7 +1016,10 @@ export function LiveListingPage({ id, go }: { id: string; go: (page: string) => 
           </a>
           <button
             className={`save-control ${saved ? 'saved' : ''}`}
-            onClick={() => setSaved(!saved)}
+            onClick={() => {
+              void toggleSaved(listing.id, saved)
+              setSaved(!saved)
+            }}
             aria-label="Save listing"
           >
             <Heart size={20} fill={saved ? 'currentColor' : 'none'} />
@@ -798,7 +1114,76 @@ export const LiveAuthPage = AuthPage;
 
 export function ProviderListingForm({ go }: { go: (page: string) => void }) { const [title, setTitle] = useState(''); const [category, setCategory] = useState<'flat' | 'hostel' | 'pg' | 'mess' | 'laundry'>('pg'); const [address, setAddress] = useState(''); const [rent, setRent] = useState(''); const [capacity, setCapacity] = useState(''); const [description, setDescription] = useState(''); const [files, setFiles] = useState<File[]>([]); const [error, setError] = useState(''); const [busy, setBusy] = useState(false); const submit = async (event: React.FormEvent) => { event.preventDefault(); if (!files.length) { setError('Add at least one photograph.'); return } setBusy(true); setError(''); try { await createListing({ title, category, description, address, locality: address, city: '', college_name: '', monthly_rent: Number(rent), security_deposit: 0, room_type: 'Private room', gender_preference: 'any', total_capacity: Number(capacity), available_capacity: Number(capacity), food_available: false, laundry_available: false, wifi_available: false }, files); go('provider-dashboard') } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not submit listing.') } finally { setBusy(false) } }; return <section className="page-section"><div className="page-heading"><div><p className="eyebrow">PROVIDER AREA</p><h1>Add a listing</h1><p>New listings are submitted for administrator approval.</p></div></div><form className="auth-card listing-form" onSubmit={submit}><label>Title<input required value={title} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. The Olive House" /></label><label>Category<select value={category} onChange={(event) => setCategory(event.target.value as typeof category)}><option value="flat">Flat</option><option value="hostel">Hostel</option><option value="pg">PG</option><option value="mess">Mess</option><option value="laundry">Laundry</option></select></label><label>Address<input required value={address} onChange={(event) => setAddress(event.target.value)} /></label><label>Monthly rent<input required min="0" type="number" value={rent} onChange={(event) => setRent(event.target.value)} /></label><label>Total capacity<input required min="1" type="number" value={capacity} onChange={(event) => setCapacity(event.target.value)} /></label><label>Description<textarea required value={description} onChange={(event) => setDescription(event.target.value)} /></label><label>Photographs<input required type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => setFiles(Array.from(event.target.files ?? []))} /></label>{error && <p className="form-error">{error}</p>}<button className="solid-button wide-button" disabled={busy}>{busy ? 'Submitting...' : 'Submit for approval'} <ArrowRight size={16} /></button></form></section> }
 
-export function SavedListingsPage({ go }: { go: (page: string) => void }) { const [listings, setListings] = useState<Listing[]>([]); const [error, setError] = useState(''); useEffect(() => { void fetchSaved().then(setListings).catch((caught) => setError(caught instanceof Error ? caught.message : 'Could not load saved listings.')) }, []); return <section className="page-section"><div className="page-heading"><div><p className="eyebrow">STUDENT AREA</p><h1>Saved listings</h1><p>Your shortlist, ready when you are.</p></div></div>{error ? <div className="error-state">{error}</div> : listings.length ? <div className="listing-grid">{listings.map((listing) => <ListingCard key={listing.id} listing={listing} onOpen={() => go(`listing/${listing.id}`)} />)}</div> : <EmptyState title="No saved listings yet" text="Save a verified home from search to see it here." />}</section> }
+export function SavedListingsPage({ go }: { go: (page: string) => void }) {
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadSaved = () => {
+    void fetchSaved().then((res) => {
+      setListings(res);
+      setLoading(false);
+    }).catch(() => {
+      setListings([]);
+      setLoading(false);
+    });
+  };
+
+  useEffect(() => {
+    loadSaved();
+    window.addEventListener('campusnet_saved_change', loadSaved);
+    return () => window.removeEventListener('campusnet_saved_change', loadSaved);
+  }, []);
+
+  const handleToggle = async (listingId: string) => {
+    await toggleSaved(listingId, true);
+    loadSaved();
+  };
+
+  return (
+    <section className="page-section">
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">STUDENT AREA</p>
+          <h1>Saved listings</h1>
+          <p>Your shortlist, ready when you are.</p>
+        </div>
+        <button className="outline-button" onClick={() => go('student-dashboard')}>
+          Back to dashboard
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="loading-state">Loading saved homes...</div>
+      ) : listings.length > 0 ? (
+        <div className="listing-grid">
+          {listings.map((listing) => (
+            <ListingCard
+              key={listing.id}
+              listing={listing}
+              onOpen={() => go(`listing/${listing.id}`)}
+              onSave={() => void handleToggle(listing.id)}
+              saved={true}
+            />
+          ))}
+        </div>
+      ) : (
+        <div style={{ textAlign: 'center', padding: '30px 20px 60px' }}>
+          <EmptyState
+            title="No saved listings yet"
+            text="You haven't saved any properties yet. Browse verified PGs, hostels, and flats across Pune and tap the heart icon to add them to your shortlist."
+          />
+          <button
+            className="solid-button"
+            onClick={() => go('search')}
+            style={{ margin: '15px auto 0', display: 'inline-flex' }}
+          >
+            Explore verified accommodations <ArrowRight size={15} />
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
 
 export function ProviderWorkspace({ go }: { go: (page: string) => void }) { const [listings, setListings] = useState<Listing[]>([]); const [error, setError] = useState(''); const [busy, setBusy] = useState<string | null>(null); const load = async () => { if (!supabase) { setListings(sampleListings); return } try { setListings(await fetchProviderListings()) } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not load your listings.') } }; useEffect(() => { void load() }, []); const confirm = async (listing: Listing) => { setBusy(listing.id); try { await confirmVacancy(listing.id, listing.available); await load() } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not confirm vacancy.') } finally { setBusy(null) } }; return <section className="page-section workspace"><RoleBanner role="provider" /><div className="workspace-heading"><div><p className="eyebrow">PROVIDER WORKSPACE</p><h1>Keep your listings trustworthy.</h1><p>Confirm availability regularly so seekers can make informed decisions.</p></div><button className="solid-button" onClick={() => go('add-listing')}>Add listing <ArrowRight size={16} /></button></div>{error && <div className="error-state">{error}</div>}<div className="provider-listings">{listings.map((listing) => <article className="provider-listing-row" key={listing.id}><div><h3>{listing.title}</h3><p>{listing.locality}, {listing.city} · {listing.available} of {listing.total} available</p><VacancyFreshness lastVerifiedAt={listing.lastVerifiedAt} /></div><div className="provider-listing-actions"><button className="outline-button" onClick={() => go(`listing/${listing.id}`)}>View</button><button className="solid-button" disabled={busy === listing.id} onClick={() => void confirm(listing)}>{busy === listing.id ? 'Confirming...' : 'Confirm vacancy'} <CheckCircle2 size={15} /></button></div></article>)}</div>{!listings.length && !error && <EmptyState title="No listings yet" text="Add your first property to start receiving enquiries." />}</section> }
 
@@ -813,6 +1198,25 @@ export function CompareSearchPage({
 }) {
   const [listings, setListings] = useState<Listing[]>([])
   const [selected, setSelected] = useState<Listing[]>([])
+  const [savedIds, setSavedIds] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem('campusnet_saved_listings')
+      return raw ? JSON.parse(raw) : []
+    } catch {
+      return []
+    }
+  })
+
+  useEffect(() => {
+    const handleSavedChange = () => {
+      try {
+        const raw = localStorage.getItem('campusnet_saved_listings')
+        setSavedIds(raw ? JSON.parse(raw) : [])
+      } catch {}
+    }
+    window.addEventListener('campusnet_saved_change', handleSavedChange)
+    return () => window.removeEventListener('campusnet_saved_change', handleSavedChange)
+  }, [])
   const [showMap, setShowMap] = useState(false)
   const [error, setError] = useState('')
   const [activeFilters, setActiveFilters] = useState<ListingFilters>(() => ({
@@ -984,6 +1388,8 @@ export function CompareSearchPage({
                 key={listing.id}
                 listing={listing}
                 onOpen={() => go(`listing/${listing.id}`)}
+                onSave={() => void toggleSaved(listing.id, savedIds.includes(listing.id))}
+                saved={savedIds.includes(listing.id)}
                 onCompare={() => toggle(listing)}
                 compareSelected={selected.some((item) => item.id === listing.id)}
               />
