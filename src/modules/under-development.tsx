@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import {
-  ArrowRight,
-  CheckCircle2,
-  Clock,
+  Calculator,
   Compass,
-  Hammer,
-  Mail,
+  Filter,
+  Layers,
+  MapPin,
+  Plus,
+  Search,
   Sparkles,
-  Zap
+  Users
 } from 'lucide-react'
 
 interface UnderDevelopmentProps {
@@ -18,57 +19,6 @@ interface UnderDevelopmentProps {
   go: (page: string) => void
 }
 
-const MODULE_DATA: Record<
-  'flatmates' | 'expense-estimator' | 'map',
-  {
-    tag: string
-    description: string
-    progress: number
-    eta: string
-    tasks: { text: string; status: 'done' | 'doing' | 'queue' }[]
-  }
-> = {
-  flatmates: {
-    tag: 'STUDENT COMPATIBILITY ALGORITHM',
-    description:
-      'Our team is actively engineering the Pune student flatmate matching network. This system analyzes college proximity, dietary habits (veg/non-veg), sleep schedules, and budget compatibility.',
-    progress: 81,
-    eta: 'Next Semester Release (v2.2)',
-    tasks: [
-      { text: 'College and campus radius filter architecture', status: 'done' },
-      { text: 'Dietary, cleanliness, and lifestyle score indexing', status: 'done' },
-      { text: 'Verified student ID privacy encryption layer', status: 'doing' },
-      { text: 'Direct secure roommate chat and request invitations', status: 'queue' }
-    ]
-  },
-  'expense-estimator': {
-    tag: 'CAMPUS LIVING COST ENGINE',
-    description:
-      'We are calibrating hyper-local Pune student expenditure datasets covering realistic monthly rent, tiffin subscriptions, Metro/PMPML bus travel, and electricity inflation across Shivajinagar, Kothrud, and Alandi.',
-    progress: 86,
-    eta: 'Next Semester Release (v2.2)',
-    tasks: [
-      { text: 'Room rent, PG and flat deposit slider engine', status: 'done' },
-      { text: 'Pune campus mess and daily tiffin expenditure baselines', status: 'done' },
-      { text: 'PMPML student pass and Metro fare integration', status: 'doing' },
-      { text: 'Multi-flatmate monthly expense split generator', status: 'queue' }
-    ]
-  },
-  map: {
-    tag: 'HIGH-PRECISION GIS CAMPUS RADAR',
-    description:
-      'Engineering high-density multi-layer GIS maps for Pune with interactive walking routes, DMart/JioMart grocery distance matrix, and 4.5 km college perimeter radar.',
-    progress: 89,
-    eta: 'Next Semester Release (v2.2)',
-    tasks: [
-      { text: 'OpenStreetMap vector tile rendering engine', status: 'done' },
-      { text: 'College campus coordinates & verified 4.5 km radius circles', status: 'done' },
-      { text: 'Live transit and essential service route visualizer', status: 'doing' },
-      { text: 'Real-time walking commute time calculator to college gates', status: 'queue' }
-    ]
-  }
-}
-
 export function UnderDevelopmentModule({
   moduleId,
   moduleNumber,
@@ -76,138 +26,247 @@ export function UnderDevelopmentModule({
   subtitle,
   go
 }: UnderDevelopmentProps) {
-  const data = MODULE_DATA[moduleId]
-  const [email, setEmail] = useState('')
-  const [subscribed, setSubscribed] = useState(() => {
-    try {
-      const saved = localStorage.getItem(`campusnet_notify_${moduleId}`)
-      return Boolean(saved)
-    } catch {
-      return false
-    }
-  })
-
-  const handleSubscribe = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!email || !email.includes('@')) return
-    try {
-      localStorage.setItem(`campusnet_notify_${moduleId}`, email)
-      setSubscribed(true)
-    } catch {}
-  }
+  const [activeTab, setActiveTab] = useState<'all' | 'saved'>('all')
 
   return (
-    <section className="page-section under-dev-container">
-      {/* Top Banner */}
-      <div className="under-dev-hero">
-        <div className="under-dev-badge-row">
-          <span className="under-dev-pill">
-            <Hammer size={13} className="spin-slow" /> {moduleNumber} · UNDER ACTIVE DEVELOPMENT
-          </span>
-          <span className="under-dev-pulse-tag">
-            <span className="pulse-dot" /> LIVE SPRINT IN PROGRESS
-          </span>
-        </div>
-
-        <h1>{title}</h1>
-        <p className="under-dev-lead">{subtitle}</p>
-        <p className="under-dev-desc">{data.description}</p>
-
-        {/* Progress Bar */}
-        <div className="under-dev-progress-box">
-          <div className="progress-header">
-            <span>
-              <strong>Development Progress:</strong> {data.progress}% Completed
-            </span>
-            <span className="eta-badge">
-              <Clock size={13} /> Target Release: {data.eta}
-            </span>
-          </div>
-          <div className="progress-bar-track">
-            <div
-              className="progress-bar-fill"
-              style={{ width: `${data.progress}%` }}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="under-dev-layout">
-        {/* Task Roadmap Card */}
-        <div className="under-dev-card">
-          <div className="card-header-row">
-            <Zap size={18} color="var(--coral)" />
-            <h3>Feature Engineering Roadmap</h3>
-          </div>
-          <ul className="dev-task-list">
-            {data.tasks.map((task, i) => (
-              <li key={i} className={`dev-task-item task-${task.status}`}>
-                {task.status === 'done' && (
-                  <CheckCircle2 size={16} className="task-icon done" />
-                )}
-                {task.status === 'doing' && (
-                  <div className="task-spinner" title="Currently being coded" />
-                )}
-                {task.status === 'queue' && (
-                  <Clock size={16} className="task-icon queue" />
-                )}
-                <span className="task-title">{task.text}</span>
-                <span className="task-state-tag">
-                  {task.status === 'done'
-                    ? 'Completed'
-                    : task.status === 'doing'
-                    ? 'In Progress'
-                    : 'Scheduled'}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Priority Early Access Card */}
-        <div className="under-dev-card early-access-card">
-          <div className="card-header-row">
-            <Sparkles size={18} color="var(--coral)" />
-            <h3>Get Early Access</h3>
-          </div>
-          <p>
-            Be the first Pune college student to test <strong>{title}</strong> before public release.
-          </p>
-
-          {subscribed ? (
-            <div className="subscribed-banner">
-              <CheckCircle2 size={18} />
-              <div>
-                <strong>You're on the VIP waitlist!</strong>
-                <p>We'll notify your email the moment this module goes live.</p>
-              </div>
+    <section className="page-section blank-template-section">
+      {/* Module 2: Flatmates Template */}
+      {moduleId === 'flatmates' && (
+        <div className="blank-template-page">
+          <div className="blank-template-header">
+            <div>
+              <p className="eyebrow">{moduleNumber} · ROOMMATE COMPATIBILITY</p>
+              <h1>{title}</h1>
+              <p className="blank-template-sub">{subtitle}</p>
             </div>
-          ) : (
-            <form onSubmit={handleSubscribe} className="subscribe-form">
-              <div className="input-with-icon">
-                <Mail size={16} className="input-icon" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your student email..."
-                  required
-                />
-              </div>
-              <button type="submit" className="solid-button" style={{ width: '100%', marginTop: 10 }}>
-                Request Early Access <ArrowRight size={15} />
+            <div className="blank-template-actions">
+              <button
+                type="button"
+                className="outline-button disabled-template-btn"
+                title="Template option ready"
+              >
+                <Plus size={14} /> Post Roommate Requirement
+                <span className="template-pill">Template</span>
               </button>
-            </form>
-          )}
+            </div>
+          </div>
 
-          <div className="under-dev-cta-box">
-            <p>Looking for verified housing right now?</p>
-            <button className="outline-button" onClick={() => go('search')}>
-              <Compass size={15} /> Browse Verified PGs & Flats
+          {/* Options Bar - Ready options shown */}
+          <div className="blank-options-bar">
+            <div className="blank-option-group">
+              <label>College Campus</label>
+              <select disabled className="template-select" value="all">
+                <option value="all">All Pune Colleges (COEP, MIT, Bharati...)</option>
+              </select>
+            </div>
+            <div className="blank-option-group">
+              <label>Gender Preference</label>
+              <select disabled className="template-select" value="any">
+                <option value="any">Any Gender</option>
+                <option value="female">Women Only</option>
+                <option value="male">Men Only</option>
+              </select>
+            </div>
+            <div className="blank-option-group">
+              <label>Dietary Habit</label>
+              <select disabled className="template-select" value="any">
+                <option value="any">Any Diet (Veg / Non-veg)</option>
+                <option value="veg">Vegetarian</option>
+                <option value="nonveg">Non-Vegetarian</option>
+              </select>
+            </div>
+            <div className="blank-option-group">
+              <label>Max Budget</label>
+              <input
+                type="text"
+                disabled
+                value="₹12,000 / mo"
+                className="template-input"
+              />
+            </div>
+            <button type="button" className="solid-button disabled-template-btn" style={{ height: 38 }}>
+              <Search size={14} /> Search
             </button>
           </div>
+
+          {/* Blank Screen / Template Wireframe */}
+          <div className="blank-canvas">
+            <div className="blank-canvas-banner">
+              <div className="blank-status-badge">
+                <span className="blank-dot" /> Template Ready · Functionality In Progress
+              </div>
+              <p>Options and page structure are staged. Active roommate profiles will display here once published.</p>
+            </div>
+
+            <div className="blank-cards-grid">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="blank-card-skeleton">
+                  <div className="skeleton-avatar" />
+                  <div className="skeleton-lines">
+                    <div className="skeleton-line title" />
+                    <div className="skeleton-line sub" />
+                    <div className="skeleton-tags">
+                      <span className="skeleton-tag" />
+                      <span className="skeleton-tag" />
+                      <span className="skeleton-tag" />
+                    </div>
+                  </div>
+                  <div className="skeleton-btn" />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Module 4: Expense Estimator Template */}
+      {moduleId === 'expense-estimator' && (
+        <div className="blank-template-page">
+          <div className="blank-template-header">
+            <div>
+              <p className="eyebrow">{moduleNumber} · LIVING EXPENSES</p>
+              <h1>{title}</h1>
+              <p className="blank-template-sub">{subtitle}</p>
+            </div>
+            <div className="blank-template-actions">
+              <button
+                type="button"
+                className="outline-button disabled-template-btn"
+                title="Template option ready"
+              >
+                <Calculator size={14} /> Export Cost Report
+                <span className="template-pill">Template</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Options Bar - Ready options shown */}
+          <div className="blank-options-bar">
+            <div className="blank-presets">
+              <span className="preset-label">Budget Presets:</span>
+              <button type="button" className="preset-btn active" disabled>Budget</button>
+              <button type="button" className="preset-btn" disabled>Mid-Range</button>
+              <button type="button" className="preset-btn" disabled>Comfort</button>
+              <button type="button" className="preset-btn" disabled>Custom</button>
+            </div>
+            <div className="blank-option-group" style={{ marginLeft: 'auto' }}>
+              <label>Target Locality</label>
+              <select disabled className="template-select" value="kothrud">
+                <option value="kothrud">Kothrud, Pune</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Blank Screen / Expense Template Wireframe */}
+          <div className="blank-canvas blank-expense-layout">
+            <div className="blank-expense-left">
+              <div className="blank-status-badge" style={{ marginBottom: 16 }}>
+                <span className="blank-dot" /> Template Ready · Calculation Model In Progress
+              </div>
+              {[
+                'Monthly Room Rent / PG Spot',
+                'Food Mess & Daily Tiffin Service',
+                'PMPML Bus & Pune Metro Commute',
+                'Electricity, Water & LPG Charges',
+                'Wi-Fi & High Speed Internet',
+                'Laundry & Personal Contingency'
+              ].map((label) => (
+                <div key={label} className="blank-slider-row">
+                  <div className="blank-slider-info">
+                    <span className="blank-slider-label">{label}</span>
+                    <span className="blank-slider-val">₹ --,---</span>
+                  </div>
+                  <div className="blank-slider-track" />
+                </div>
+              ))}
+            </div>
+
+            <div className="blank-expense-right">
+              <div className="blank-summary-card">
+                <span className="summary-title">ESTIMATED RECURRING MONTHLY TOTAL</span>
+                <div className="blank-total-display">
+                  ₹ --,--- <small>/ month</small>
+                </div>
+                <div className="blank-donut-placeholder">
+                  <div className="donut-circle" />
+                  <div className="donut-text">Template Staged</div>
+                </div>
+                <p className="summary-note">
+                  All sliders, formulas, and Pune campus expenditure baselines are staged. Computation is currently non-functional.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Module 5: Map Radar Template */}
+      {moduleId === 'map' && (
+        <div className="blank-template-page">
+          <div className="blank-template-header">
+            <div>
+              <p className="eyebrow">{moduleNumber} · GIS CAMPUS RADAR</p>
+              <h1>{title}</h1>
+              <p className="blank-template-sub">{subtitle}</p>
+            </div>
+            <div className="blank-template-actions">
+              <button
+                type="button"
+                className="outline-button disabled-template-btn"
+                title="Template option ready"
+              >
+                <Compass size={14} /> Recenter College
+                <span className="template-pill">Template</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Options Bar - Ready options shown */}
+          <div className="blank-options-bar">
+            <div className="blank-option-group" style={{ flex: 1 }}>
+              <label>Search Locality or College</label>
+              <div className="template-search-box">
+                <Search size={14} />
+                <input
+                  type="text"
+                  disabled
+                  placeholder="e.g. COEP Shivajinagar, Kothrud, Viman Nagar..."
+                  className="template-input"
+                />
+              </div>
+            </div>
+            <div className="blank-option-group">
+              <label>Radar Layers</label>
+              <div className="template-layers">
+                <label><input type="checkbox" defaultChecked disabled /> Hostels</label>
+                <label><input type="checkbox" defaultChecked disabled /> Colleges</label>
+                <label><input type="checkbox" defaultChecked disabled /> Messes</label>
+              </div>
+            </div>
+          </div>
+
+          {/* Blank Screen / Map Radar Canvas */}
+          <div className="blank-canvas blank-map-canvas">
+            <div className="blank-map-grid">
+              <div className="blank-radar-reticle">
+                <div className="radar-circle radar-outer" />
+                <div className="radar-circle radar-mid" />
+                <div className="radar-circle radar-inner" />
+                <div className="radar-crosshair-h" />
+                <div className="radar-crosshair-v" />
+                <Compass size={32} className="radar-center-icon" />
+              </div>
+              <div className="blank-map-overlay">
+                <div className="blank-status-badge">
+                  <span className="blank-dot" /> Map Template Ready · Vector GIS Tiles In Progress
+                </div>
+                <p className="blank-coords">Coordinates: 18.5204° N, 73.8567° E · Pune Metro Region</p>
+                <small>Map viewport, layer toggles, and radius radar are staged. Live tile rendering is currently non-functional.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   )
 }
