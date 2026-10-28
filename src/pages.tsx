@@ -155,6 +155,10 @@ export function ListingPage({ id, go }: { id: string; go: (page: string) => void
     }
   })
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [id])
+
   const googleMapsUrl = `https://www.google.com/maps?q=${listing.latitude},${listing.longitude}+(${encodeURIComponent(
     listing.title
   )})`
@@ -985,6 +989,10 @@ export function LiveListingPage({ id, go }: { id: string; go: (page: string) => 
       return false
     }
   })
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [id])
   const [message, setMessage] = useState('')
 
   useEffect(() => {

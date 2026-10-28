@@ -107,8 +107,13 @@ export default function App() {
     }
   }, [])
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [routeInfo.section, routeInfo.id])
+
   const go = (page: string) => {
     window.location.hash = page
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
   }
 
   const { section, id, params } = routeInfo

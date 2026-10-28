@@ -189,7 +189,14 @@ export function ListingCard({
   return (
     <article className="component-listing-card">
       <button className="card-image" onClick={onOpen}>
-        <img src={listing.image} alt={`${listing.title} interior`} />
+        <img
+          src={listing.image}
+          alt={`${listing.title} interior`}
+          loading="lazy"
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).src = '/hostels/hostel-room-1.jpg'
+          }}
+        />
         <span>{listing.category}</span>
       </button>
       <div className="card-content">
@@ -230,17 +237,24 @@ export function ListingCard({
         <div className="card-price">
           <span><b>₹{listing.price.toLocaleString('en-IN')}</b> / month</span>
           <div className="card-actions">
-            <label
+            <button
+              type="button"
               className={`compare-control ${compareSelected ? 'compare-control-checked' : ''}`}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation()
+                onCompare?.()
+              }}
+              title={compareSelected ? 'Remove from comparison' : 'Compare up to 3 homes side-by-side'}
             >
               <input
                 type="checkbox"
                 checked={compareSelected}
-                onChange={onCompare}
+                readOnly
+                tabIndex={-1}
+                aria-hidden="true"
               />
-              Compare
-            </label>
+              <span>Compare</span>
+            </button>
             <button className="text-action" onClick={onOpen}>
               View details <ChevronRight size={15} />
             </button>
@@ -378,16 +392,34 @@ export function ImageGallery({ listing }: { listing: Listing }) {
         listing.image,
         listing.category === 'Flat'
           ? 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=800&q=80'
-          : 'https://images.unsplash.com/photo-1540518614846-7ede433c4ef4?auto=format&fit=crop&w=800&q=80',
+          : 'https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?auto=format&fit=crop&w=800&q=80',
         'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80'
       ]
 
   return (
     <div className="image-gallery">
-      <img src={images[0]} alt={`${listing.title} main bedroom`} />
+      <img
+        src={images[0]}
+        alt={`${listing.title} main bedroom`}
+        onError={(e) => {
+          (e.currentTarget as HTMLImageElement).src = '/hostels/hostel-room-1.jpg'
+        }}
+      />
       <div>
-        <img src={images[1]} alt={`${listing.title} living / study area`} />
-        <img src={images[2]} alt={`${listing.title} washroom or balcony`} />
+        <img
+          src={images[1]}
+          alt={`${listing.title} living / study area`}
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).src = '/hostels/hostel-room-2.jpg'
+          }}
+        />
+        <img
+          src={images[2]}
+          alt={`${listing.title} washroom or balcony`}
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).src = '/hostels/hostel-room-3.jpg'
+          }}
+        />
       </div>
     </div>
   )
