@@ -20,6 +20,7 @@ import {
   SafetyPage,
   SavedListingsPage,
   SettingsPage,
+  UnderDevelopmentModule,
   Workspace
 } from './pages'
 import { supabase } from './supabase'
@@ -150,13 +151,40 @@ export default function App() {
   } else if (section === 'listing') {
     page = supabase ? <LiveListingPage id={id ?? ''} go={go} /> : <ListingPage id={id ?? ''} go={go} />
   } else if (section === 'flatmates') {
-    page = <FlatmateMatchingPage />
+    // Preserved for future: <FlatmateMatchingPage />
+    page = (
+      <UnderDevelopmentModule
+        moduleId="flatmates"
+        moduleNumber="MODULE 2"
+        title="Flatmate Matching"
+        subtitle="Pune Student Roommate Compatibility Network"
+        go={go}
+      />
+    )
   } else if (section === 'services') {
     page = <EnhancedServicesPage />
   } else if (section === 'expense-estimator' || section === 'expenses') {
-    page = <ExpenseEstimatorPage />
+    // Preserved for future: <ExpenseEstimatorPage />
+    page = (
+      <UnderDevelopmentModule
+        moduleId="expense-estimator"
+        moduleNumber="MODULE 4"
+        title="Monthly Expense Estimation"
+        subtitle="Student Cost of Living & Mess Budget Calibrator"
+        go={go}
+      />
+    )
   } else if (section === 'map') {
-    page = <FullMapPage go={go} />
+    // Preserved for future: <FullMapPage go={go} />
+    page = (
+      <UnderDevelopmentModule
+        moduleId="map"
+        moduleNumber="MODULE 5"
+        title="Location & Map Explorer"
+        subtitle="High-Precision GIS Campus & Transit Radar"
+        go={go}
+      />
+    )
   } else if (section === 'colleges') {
     page = <CollegesNearbyPage go={go} />
   } else if (section === 'add-listing' && (!supabase || (session && role === 'provider'))) {

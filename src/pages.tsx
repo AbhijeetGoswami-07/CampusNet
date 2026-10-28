@@ -9,8 +9,9 @@ import { CollegesNearbyPage } from './modules/colleges'
 import { EnhancedServicesPage } from './modules/services-enhanced'
 import { FullMapPage } from './modules/map-full'
 import { SettingsPage } from './modules/settings'
+import { UnderDevelopmentModule } from './modules/under-development'
 
-export { FlatmateMatchingPage, ExpenseEstimatorPage, CollegesNearbyPage, EnhancedServicesPage, FullMapPage, SettingsPage }
+export { FlatmateMatchingPage, ExpenseEstimatorPage, CollegesNearbyPage, EnhancedServicesPage, FullMapPage, SettingsPage, UnderDevelopmentModule }
 
 export function HomePage({ go }: { go: (page: string) => void }) {
   return (
@@ -54,11 +55,11 @@ export function HomePage({ go }: { go: (page: string) => void }) {
 
           <div className="module-banner-card" onClick={() => go('flatmates')}>
             <div>
-              <div className="module-badge">MODULE 2</div>
+              <div className="module-badge dev-badge">MODULE 2 · IN PROGRESS</div>
               <h3>Flatmate Matching</h3>
               <p>Match with compatible Pune college students based on university, daily budget, food preference, and cleanliness habits.</p>
             </div>
-            <span className="card-action"><UserCheck size={16} /> Find Flatmates <ArrowRight size={14} /></span>
+            <span className="card-action"><UserCheck size={16} /> Work In Progress <ArrowRight size={14} /></span>
           </div>
 
           <div className="module-banner-card" onClick={() => go('services')}>
@@ -72,20 +73,20 @@ export function HomePage({ go }: { go: (page: string) => void }) {
 
           <div className="module-banner-card" onClick={() => go('expense-estimator')}>
             <div>
-              <div className="module-badge">MODULE 4</div>
+              <div className="module-badge dev-badge">MODULE 4 · IN PROGRESS</div>
               <h3>Monthly Expense Estimation</h3>
               <p>Interactive student budget calculator with realistic Pune presets for rent, food, commute, utilities and leisure.</p>
             </div>
-            <span className="card-action"><IndianRupee size={16} /> Calculate Budget <ArrowRight size={14} /></span>
+            <span className="card-action"><IndianRupee size={16} /> Work In Progress <ArrowRight size={14} /></span>
           </div>
 
           <div className="module-banner-card" onClick={() => go('map')}>
             <div>
-              <div className="module-badge">MODULE 5</div>
+              <div className="module-badge dev-badge">MODULE 5 · IN PROGRESS</div>
               <h3>Location & Map Explorer</h3>
               <p>Interactive GIS map covering Pune city with multi-layer overlays for housing, daily services, and college campuses.</p>
             </div>
-            <span className="card-action"><Map size={16} /> Open Interactive Map <ArrowRight size={14} /></span>
+            <span className="card-action"><Map size={16} /> Work In Progress <ArrowRight size={14} /></span>
           </div>
 
           <div className="module-banner-card" onClick={() => go('colleges')}>
