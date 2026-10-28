@@ -264,7 +264,279 @@ export function ListingCard({
     </article>
   )
 }
-export function FilterSidebar({ onApply }: { onApply?: (filters: { category?: string; maxRent?: number; maxTotal?: number; maxDistance?: number; roomType?: string; gender?: string; food?: boolean; laundry?: boolean; wifi?: boolean }) => void }) { const [category, setCategory] = useState(''); const [maxRent, setMaxRent] = useState(50000); const [maxTotal, setMaxTotal] = useState(''); const [maxDistance, setMaxDistance] = useState(''); const [roomType, setRoomType] = useState(''); const [gender, setGender] = useState(''); const [food, setFood] = useState(false); const [wifi, setWifi] = useState(false); const [laundry, setLaundry] = useState(false); return <aside className="filter-sidebar"><div className="filter-heading"><h3>Refine search</h3><button type="button" onClick={() => { setCategory(''); setMaxRent(50000); setMaxTotal(''); setMaxDistance(''); setRoomType(''); setGender(''); setFood(false); setWifi(false); setLaundry(false); onApply?.({}) }}>Clear all</button></div><label>Category<select value={category} onChange={(event) => setCategory(event.target.value)}><option value="">All categories</option><option value="flat">Flat</option><option value="hostel">Hostel</option><option value="pg">PG</option><option value="mess">Mess</option><option value="laundry">Laundry</option></select></label><label>Maximum rent<input type="range" min="0" max="50000" value={maxRent} onChange={(event) => setMaxRent(Number(event.target.value))} /><span className="range-labels"><small>₹0</small><small>₹{maxRent.toLocaleString('en-IN')}</small></span></label><label>Maximum total monthly cost<input type="number" min="0" value={maxTotal} onChange={(event) => setMaxTotal(event.target.value)} placeholder="Any total" /></label><label>Maximum distance (km)<input type="number" min="0" value={maxDistance} onChange={(event) => setMaxDistance(event.target.value)} placeholder="Any distance" /></label><label>Room type<select value={roomType} onChange={(event) => setRoomType(event.target.value)}><option value="">Any room type</option><option>Private room</option><option>Shared room</option><option>Entire place</option></select></label><label>Gender preference<select value={gender} onChange={(event) => setGender(event.target.value)}><option value="">Any preference</option><option>Any</option><option>Women</option><option>Men</option></select></label><fieldset><legend>Amenities</legend><label className="check-row"><input type="checkbox" checked={food} onChange={(event) => setFood(event.target.checked)} /> Food included</label><label className="check-row"><input type="checkbox" checked={wifi} onChange={(event) => setWifi(event.target.checked)} /> Wi-Fi</label><label className="check-row"><input type="checkbox" checked={laundry} onChange={(event) => setLaundry(event.target.checked)} /> Laundry</label></fieldset><button type="button" className="solid-button filter-apply" onClick={() => onApply?.({ category: category || undefined, maxRent: maxRent < 50000 ? maxRent : undefined, maxTotal: maxTotal ? Number(maxTotal) : undefined, maxDistance: maxDistance ? Number(maxDistance) : undefined, roomType: roomType || undefined, gender: gender || undefined, food, laundry, wifi })}>Apply filters</button></aside> }
+export function FilterSidebar({
+  onApply
+}: {
+  onApply?: (filters: {
+    category?: string
+    maxRent?: number
+    maxTotal?: number
+    maxDistance?: number
+    roomType?: string
+    gender?: string
+    food?: boolean
+    laundry?: boolean
+    wifi?: boolean
+  }) => void
+}) {
+  const [category, setCategory] = useState('')
+  const [maxRent, setMaxRent] = useState(50000)
+  const [maxTotal, setMaxTotal] = useState('')
+  const [maxDistance, setMaxDistance] = useState('')
+  const [roomType, setRoomType] = useState('')
+  const [gender, setGender] = useState('')
+  const [food, setFood] = useState(false)
+  const [wifi, setWifi] = useState(false)
+  const [laundry, setLaundry] = useState(false)
+
+  const activeCount = [
+    category !== '',
+    maxRent < 50000,
+    maxTotal !== '',
+    maxDistance !== '',
+    roomType !== '',
+    gender !== '',
+    food,
+    wifi,
+    laundry
+  ].filter(Boolean).length
+
+  const emit = (overrides: {
+    category?: string
+    maxRent?: number
+    maxTotal?: string
+    maxDistance?: string
+    roomType?: string
+    gender?: string
+    food?: boolean
+    wifi?: boolean
+    laundry?: boolean
+  } = {}) => {
+    const c = overrides.category !== undefined ? overrides.category : category
+    const r = overrides.maxRent !== undefined ? overrides.maxRent : maxRent
+    const t = overrides.maxTotal !== undefined ? overrides.maxTotal : maxTotal
+    const d = overrides.maxDistance !== undefined ? overrides.maxDistance : maxDistance
+    const rt = overrides.roomType !== undefined ? overrides.roomType : roomType
+    const g = overrides.gender !== undefined ? overrides.gender : gender
+    const f = overrides.food !== undefined ? overrides.food : food
+    const w = overrides.wifi !== undefined ? overrides.wifi : wifi
+    const l = overrides.laundry !== undefined ? overrides.laundry : laundry
+
+    onApply?.({
+      category: c || undefined,
+      maxRent: r < 50000 ? r : undefined,
+      maxTotal: t ? Number(t) : undefined,
+      maxDistance: d ? Number(d) : undefined,
+      roomType: rt || undefined,
+      gender: g || undefined,
+      food: f,
+      laundry: l,
+      wifi: w
+    })
+  }
+
+  const clearAll = () => {
+    setCategory('')
+    setMaxRent(50000)
+    setMaxTotal('')
+    setMaxDistance('')
+    setRoomType('')
+    setGender('')
+    setFood(false)
+    setWifi(false)
+    setLaundry(false)
+    onApply?.({})
+  }
+
+  return (
+    <aside className="filter-sidebar">
+      <div className="filter-heading">
+        <div className="filter-heading-title">
+          <h3>Refine search</h3>
+          {activeCount > 0 && <span className="active-filter-badge">{activeCount} active</span>}
+        </div>
+        <div className="filter-heading-actions">
+          <button
+            type="button"
+            className="filter-quick-apply-btn"
+            onClick={() => emit()}
+            title="Apply current filters"
+          >
+            Apply
+          </button>
+          {activeCount > 0 && (
+            <button
+              type="button"
+              className="filter-clear"
+              onClick={clearAll}
+              title="Reset all filters"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="filter-scroll-content">
+        <label>
+          Category
+          <select
+            value={category}
+            onChange={(event) => {
+              const val = event.target.value
+              setCategory(val)
+              emit({ category: val })
+            }}
+          >
+            <option value="">All categories</option>
+            <option value="flat">Flat</option>
+            <option value="hostel">Hostel</option>
+            <option value="pg">PG</option>
+            <option value="mess">Mess</option>
+            <option value="laundry">Laundry</option>
+          </select>
+        </label>
+
+        <label>
+          Maximum rent
+          <input
+            type="range"
+            min="0"
+            max="50000"
+            step="500"
+            value={maxRent}
+            onChange={(event) => {
+              const val = Number(event.target.value)
+              setMaxRent(val)
+              emit({ maxRent: val })
+            }}
+          />
+          <span className="range-labels">
+            <small>₹0</small>
+            <small>₹{maxRent.toLocaleString('en-IN')}</small>
+          </span>
+        </label>
+
+        <label>
+          Maximum total monthly cost
+          <input
+            type="number"
+            min="0"
+            value={maxTotal}
+            onChange={(event) => {
+              const val = event.target.value
+              setMaxTotal(val)
+              emit({ maxTotal: val })
+            }}
+            placeholder="Any total"
+          />
+        </label>
+
+        <label>
+          Maximum distance (km)
+          <input
+            type="number"
+            min="0"
+            value={maxDistance}
+            onChange={(event) => {
+              const val = event.target.value
+              setMaxDistance(val)
+              emit({ maxDistance: val })
+            }}
+            placeholder="Any distance"
+          />
+        </label>
+
+        <label>
+          Room type
+          <select
+            value={roomType}
+            onChange={(event) => {
+              const val = event.target.value
+              setRoomType(val)
+              emit({ roomType: val })
+            }}
+          >
+            <option value="">Any room type</option>
+            <option>Private room</option>
+            <option>Shared room</option>
+            <option>Entire place</option>
+          </select>
+        </label>
+
+        <label>
+          Gender preference
+          <select
+            value={gender}
+            onChange={(event) => {
+              const val = event.target.value
+              setGender(val)
+              emit({ gender: val })
+            }}
+          >
+            <option value="">Any preference</option>
+            <option>Any</option>
+            <option>Women</option>
+            <option>Men</option>
+          </select>
+        </label>
+
+        <fieldset>
+          <legend>Amenities</legend>
+          <label className="check-row">
+            <input
+              type="checkbox"
+              checked={food}
+              onChange={(event) => {
+                const val = event.target.checked
+                setFood(val)
+                emit({ food: val })
+              }}
+            />{' '}
+            Food included
+          </label>
+          <label className="check-row">
+            <input
+              type="checkbox"
+              checked={wifi}
+              onChange={(event) => {
+                const val = event.target.checked
+                setWifi(val)
+                emit({ wifi: val })
+              }}
+            />{' '}
+            Wi-Fi
+          </label>
+          <label className="check-row">
+            <input
+              type="checkbox"
+              checked={laundry}
+              onChange={(event) => {
+                const val = event.target.checked
+                setLaundry(val)
+                emit({ laundry: val })
+              }}
+            />{' '}
+            Laundry
+          </label>
+        </fieldset>
+      </div>
+
+      <div className="filter-footer-sticky">
+        <button
+          type="button"
+          className="solid-button filter-apply"
+          onClick={() => emit()}
+        >
+          Apply filters {activeCount > 0 ? `(${activeCount})` : ''}
+        </button>
+        <div className="filter-live-indicator">
+          <span className="live-dot" /> Live auto-updating
+        </div>
+      </div>
+    </aside>
+  )
+}
 export function CategorySelector({ onSelect }: { onSelect?: (category: string) => void }) { return <div className="category-selector">{['All homes', 'Flats', 'Hostels', 'PGs', 'Messes', 'Laundry'].map((item) => <button key={item} onClick={() => onSelect?.(item)}>{item}</button>)}</div> }
 const money = (value: number | null | undefined) => value === null || value === undefined ? 'Not provided' : `₹${value.toLocaleString('en-IN')}`
 const totalMonthlyCost = (listing: Listing) => [listing.price, listing.foodCost, listing.electricityCost, listing.wifiCost, listing.laundryCost, listing.maintenanceCost, listing.travelCost].reduce((sum: number, value: number | null) => sum + (value ?? 0), 0)

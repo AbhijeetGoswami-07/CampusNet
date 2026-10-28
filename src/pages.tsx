@@ -141,7 +141,7 @@ export function HomePage({ go }: { go: (page: string) => void }) {
   )
 }
 
-export function SearchPage({ go }: { go: (page: string) => void }) { const [filtered, setFiltered] = useState(sampleListings); const [saved, setSaved] = useState<string[]>([]); return <section className="page-section"><div className="page-heading"><div><p className="eyebrow">SEARCH RESULTS</p><h1>Homes near your next destination</h1><p>12 verified places match your search.</p></div><button className="outline-button">Compare selected ({saved.length})</button></div><SearchBar /><CategorySelector onSelect={(category) => setFiltered(category === 'All homes' ? sampleListings : sampleListings.filter((item) => item.category.toLowerCase() === category.slice(0, -1).toLowerCase()))} /><div className="search-layout"><FilterSidebar /><div className="result-stack"><div className="result-toolbar"><b>{filtered.length + 9} homes found</b><select aria-label="Sort results"><option>Recommended</option><option>Price: low to high</option><option>Most available</option></select></div>{filtered.map((listing) => <ListingCard key={listing.id} listing={listing} onOpen={() => go(`listing/${listing.id}`)} onSave={() => setSaved((current) => current.includes(listing.id) ? current.filter((id) => id !== listing.id) : [...current, listing.id])} saved={saved.includes(listing.id)} />)}</div></div></section> }
+export function SearchPage({ go }: { go: (page: string) => void }) { const [filtered, setFiltered] = useState(sampleListings); const [saved, setSaved] = useState<string[]>([]); return <section className="page-section"><div className="page-heading"><div><p className="eyebrow">SEARCH RESULTS</p><h1>Homes near your next destination</h1><p>12 verified places match your search.</p></div><button className="outline-button">Compare selected ({saved.length})</button></div><SearchBar /><CategorySelector onSelect={(category) => setFiltered(category === 'All homes' ? sampleListings : sampleListings.filter((item) => item.category.toLowerCase() === category.slice(0, -1).toLowerCase()))} /><div className="search-layout"><FilterSidebar onApply={(f) => setFiltered(sampleListings.filter((item) => { if (f.category && f.category !== "all" && !item.category.toLowerCase().includes(f.category.toLowerCase())) return false; if (f.maxRent && item.price > f.maxRent) return false; if (f.roomType && item.roomType.toLowerCase() !== f.roomType.toLowerCase()) return false; if (f.gender && f.gender !== "Any" && item.genderPreference.toLowerCase() !== f.gender.toLowerCase()) return false; if (f.food && !item.food) return false; if (f.wifi && !item.wifi) return false; if (f.laundry && !item.laundry) return false; return true; }))} /><div className="result-stack"><div className="result-toolbar"><b>{filtered.length + 9} homes found</b><select aria-label="Sort results"><option>Recommended</option><option>Price: low to high</option><option>Most available</option></select></div>{filtered.map((listing) => <ListingCard key={listing.id} listing={listing} onOpen={() => go(`listing/${listing.id}`)} onSave={() => setSaved((current) => current.includes(listing.id) ? current.filter((id) => id !== listing.id) : [...current, listing.id])} saved={saved.includes(listing.id)} />)}</div></div></section> }
 
 export function ListingPage({ id, go }: { id: string; go: (page: string) => void }) {
   const listing = sampleListings.find((item) => item.id === id) ?? sampleListings[0]
@@ -976,7 +976,7 @@ export function ModulePage({ title, eyebrow, role, go }: { title: string; eyebro
   );
 }
 
-export function LiveSearchPage({ go }: { go: (page: string) => void }) { const [query, setQuery] = useState(''); const [listings, setListings] = useState<Listing[]>([]); const [error, setError] = useState(''); const [loading, setLoading] = useState(false); const runSearch = async (value = query) => { setLoading(true); setError(''); try { setListings(await fetchListings({ query: value, sort: 'updated' })) } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not load listings.'); setListings([]) } finally { setLoading(false) } }; useEffect(() => { if (supabase) void runSearch('') }, []); const visible = supabase ? listings : sampleListings; return <section className="page-section"><div className="page-heading"><div><p className="eyebrow">SEARCH RESULTS</p><h1>Homes near your next destination</h1><p>{supabase ? `${listings.length} verified places match your search.` : 'Development preview listings. Connect Supabase for live results.'}</p></div></div><SearchBar onSearch={(value) => { setQuery(value); void runSearch(value) }} /><CategorySelector onSelect={(category) => { const value = category === 'All homes' ? '' : category.slice(0, -1).toLowerCase(); setQuery(value); void runSearch(value) }} /><div className="search-layout"><FilterSidebar onApply={() => void runSearch()} /><div className="result-stack">{loading ? <div className="loading-state">Loading verified listings...</div> : error ? <div className="error-state"><p>{error}</p></div> : visible.map((listing) => <ListingCard key={listing.id} listing={listing} onOpen={() => go(`listing/${listing.id}`)} />)}</div></div></section> }
+export function LiveSearchPage({ go }: { go: (page: string) => void }) { const [query, setQuery] = useState(''); const [listings, setListings] = useState<Listing[]>([]); const [error, setError] = useState(''); const [loading, setLoading] = useState(false); const [extraFilters, setExtraFilters] = useState<ListingFilters>({}); const runSearch = async (value = query, filters: ListingFilters = extraFilters) => { setLoading(true); setError(''); try { setListings(await fetchListings({ query: value, ...filters, sort: 'updated' })) } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not load listings.'); setListings([]) } finally { setLoading(false) } }; useEffect(() => { if (supabase) void runSearch('', {}) }, []); const visible = supabase ? listings : sampleListings; return <section className="page-section"><div className="page-heading"><div><p className="eyebrow">SEARCH RESULTS</p><h1>Homes near your next destination</h1><p>{supabase ? `${listings.length} verified places match your search.` : 'Development preview listings. Connect Supabase for live results.'}</p></div></div><SearchBar onSearch={(value) => { setQuery(value); void runSearch(value, extraFilters) }} /><CategorySelector onSelect={(category) => { const value = category === 'All homes' ? '' : category.slice(0, -1).toLowerCase(); setQuery(value); void runSearch(value, extraFilters) }} /><div className="search-layout"><FilterSidebar onApply={(f) => { setExtraFilters(f); void runSearch(query, f); }} /><div className="result-stack">{loading ? <div className="loading-state">Loading verified listings...</div> : error ? <div className="error-state"><p>{error}</p></div> : visible.map((listing) => <ListingCard key={listing.id} listing={listing} onOpen={() => go(`listing/${listing.id}`)} />)}</div></div></section> }
 
 export function LiveListingPage({ id, go }: { id: string; go: (page: string) => void }) {
   const [listing, setListing] = useState<Listing | null>(null)
@@ -1283,6 +1283,24 @@ export function CompareSearchPage({
       }
       if (activeFilters.recentlyVerified && !item.verified) {
         return false
+      }
+      if (activeFilters.food && !item.food) {
+        return false
+      }
+      if (activeFilters.wifi && !item.wifi) {
+        return false
+      }
+      if (activeFilters.laundry && !item.laundry) {
+        return false
+      }
+      if (activeFilters.maxDistance !== undefined && item.distance !== null && item.distance > activeFilters.maxDistance) {
+        return false
+      }
+      if (activeFilters.maxTotal !== undefined) {
+        const total = [item.price, item.foodCost, item.electricityCost, item.wifiCost, item.laundryCost, item.maintenanceCost, item.travelCost].reduce<number>((sum: number, value: number | null) => sum + (value ?? 0), 0)
+        if (total > activeFilters.maxTotal) {
+          return false
+        }
       }
       return true
     })
