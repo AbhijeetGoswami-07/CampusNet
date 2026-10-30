@@ -31,6 +31,7 @@ import './freshness.css'
 import './map.css'
 import './ai-search.css'
 import './modules-styles.css'
+import './premium.css'
 
 function parseRoute() {
   const hash = window.location.hash.replace(/^#\/?/, '') || 'home'
