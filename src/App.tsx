@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Footer, Navbar } from './components'
+import { CompareFloatingDock, Footer, Navbar } from './components'
 import {
   AboutPage,
   AuthPage,
   CollegesNearbyPage,
+  ComparePage,
   CompareSearchPage,
   EnhancedServicesPage,
   ExpenseEstimatorPage,
@@ -148,6 +149,8 @@ export default function App() {
         initialCategory={params.get('category') || ''}
       />
     )
+  } else if (section === 'compare') {
+    page = <ComparePage go={go} />
   } else if (section === 'listing') {
     page = supabase ? <LiveListingPage id={id ?? ''} go={go} /> : <ListingPage id={id ?? ''} go={go} />
   } else if (section === 'flatmates') {
@@ -223,6 +226,7 @@ export default function App() {
     <>
       <Navbar onNavigate={go} active={section} signedIn={session} role={role} onLogout={() => { void supabase?.auth.signOut(); localStorage.removeItem('campusnet_session'); window.dispatchEvent(new Event('campusnet_auth_change')); setSession(false); setRole(null); go('home') }} />
       <main>{page}</main>
+      <CompareFloatingDock go={go} />
       <Footer onNavigate={go} />
     </>
   )

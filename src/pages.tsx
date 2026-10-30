@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowRight, BarChart3, Building2, CheckCircle2, ClipboardList, Compass, FileText, Heart, IndianRupee, Map, MapPin, MessageSquare, Settings, ShieldCheck, Star, UserCheck, Users, Utensils } from 'lucide-react'
+import { ArrowRight, BarChart3, Building2, CheckCircle2, CheckSquare, ClipboardList, Compass, FileText, Heart, IndianRupee, Map, MapPin, MessageSquare, Plus, Scale, Search, Settings, ShieldCheck, Square, Star, UserCheck, Users, Utensils } from 'lucide-react'
 import { CategorySelector, ComparisonTable, CostBreakdown, EmptyState, EnquiryModal, FilterSidebar, ImageGallery, Listing, ListingCard, MapView, RatingStars, ReportListingModal, RoleBanner, SearchBar, VerificationBadge, VacancyFreshness, VacancyStatus, sampleListings } from './components'
-import { confirmVacancy, createListing, fetchListings, fetchMyEnquiries, fetchProviderListings, fetchSaved, getListing, parseNaturalSearch, reportListing, sendEnquiry, submitReview, toggleSaved, type ListingFilters } from './data'
+import { clearComparedListings, confirmVacancy, createListing, fetchListings, fetchMyEnquiries, fetchProviderListings, fetchSaved, getComparedListingIds, getComparedListings, isListingCompared, toggleComparedListing, getListing, parseNaturalSearch, reportListing, sendEnquiry, submitReview, toggleSaved, type ListingFilters } from './data'
 import { supabase } from './supabase'
 import { FlatmateMatchingPage } from './modules/flatmates'
 import { ExpenseEstimatorPage } from './modules/expense'
@@ -141,7 +141,7 @@ export function HomePage({ go }: { go: (page: string) => void }) {
   )
 }
 
-export function SearchPage({ go }: { go: (page: string) => void }) { const [filtered, setFiltered] = useState(sampleListings); const [saved, setSaved] = useState<string[]>([]); return <section className="page-section"><div className="page-heading"><div><p className="eyebrow">SEARCH RESULTS</p><h1>Homes near your next destination</h1><p>12 verified places match your search.</p></div><button className="outline-button">Compare selected ({saved.length})</button></div><SearchBar /><CategorySelector onSelect={(category) => setFiltered(category === 'All homes' ? sampleListings : sampleListings.filter((item) => item.category.toLowerCase() === category.slice(0, -1).toLowerCase()))} /><div className="search-layout"><FilterSidebar onApply={(f) => setFiltered(sampleListings.filter((item) => { if (f.category && f.category !== "all" && !item.category.toLowerCase().includes(f.category.toLowerCase())) return false; if (f.maxRent && item.price > f.maxRent) return false; if (f.roomType && item.roomType.toLowerCase() !== f.roomType.toLowerCase()) return false; if (f.gender && f.gender !== "Any" && item.genderPreference.toLowerCase() !== f.gender.toLowerCase()) return false; if (f.food && !item.food) return false; if (f.wifi && !item.wifi) return false; if (f.laundry && !item.laundry) return false; return true; }))} /><div className="result-stack"><div className="result-toolbar"><b>{filtered.length + 9} homes found</b><select aria-label="Sort results"><option>Recommended</option><option>Price: low to high</option><option>Most available</option></select></div>{filtered.map((listing) => <ListingCard key={listing.id} listing={listing} onOpen={() => go(`listing/${listing.id}`)} onSave={() => setSaved((current) => current.includes(listing.id) ? current.filter((id) => id !== listing.id) : [...current, listing.id])} saved={saved.includes(listing.id)} />)}</div></div></section> }
+export function SearchPage({ go }: { go: (page: string) => void }) { const [filtered, setFiltered] = useState(sampleListings); const [saved, setSaved] = useState<string[]>([]); return <section className="page-section"><div className="page-heading"><div><p className="eyebrow">SEARCH RESULTS</p><h1>Homes near your next destination</h1><p>12 verified places match your search.</p></div><button className="outline-button" onClick={() => go("compare")}>Compare selected ({saved.length})</button></div><SearchBar /><CategorySelector onSelect={(category) => setFiltered(category === 'All homes' ? sampleListings : sampleListings.filter((item) => item.category.toLowerCase() === category.slice(0, -1).toLowerCase()))} /><div className="search-layout"><FilterSidebar onApply={(f) => setFiltered(sampleListings.filter((item) => { if (f.category && f.category !== "all" && !item.category.toLowerCase().includes(f.category.toLowerCase())) return false; if (f.maxRent && item.price > f.maxRent) return false; if (f.roomType && item.roomType.toLowerCase() !== f.roomType.toLowerCase()) return false; if (f.gender && f.gender !== "Any" && item.genderPreference.toLowerCase() !== f.gender.toLowerCase()) return false; if (f.food && !item.food) return false; if (f.wifi && !item.wifi) return false; if (f.laundry && !item.laundry) return false; return true; }))} /><div className="result-stack"><div className="result-toolbar"><b>{filtered.length + 9} homes found</b><select aria-label="Sort results"><option>Recommended</option><option>Price: low to high</option><option>Most available</option></select></div>{filtered.map((listing) => <ListingCard key={listing.id} listing={listing} onOpen={() => go(`listing/${listing.id}`)} onSave={() => setSaved((current) => current.includes(listing.id) ? current.filter((id) => id !== listing.id) : [...current, listing.id])} saved={saved.includes(listing.id)} />)}</div></div></section> }
 
 export function ListingPage({ id, go }: { id: string; go: (page: string) => void }) {
   const listing = sampleListings.find((item) => item.id === id) ?? sampleListings[0]
@@ -155,6 +155,13 @@ export function ListingPage({ id, go }: { id: string; go: (page: string) => void
       return false
     }
   })
+  const [compared, setCompared] = useState(() => isListingCompared(id))
+
+  useEffect(() => {
+    const handleCompareSync = () => setCompared(isListingCompared(id))
+    window.addEventListener('campusnet_compare_change', handleCompareSync)
+    return () => window.removeEventListener('campusnet_compare_change', handleCompareSync)
+  }, [id])
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
@@ -169,6 +176,20 @@ export function ListingPage({ id, go }: { id: string; go: (page: string) => void
       <div className="detail-top-nav">
         <button className="back-link" onClick={() => go('search')}>← Back to search</button>
         <div className="detail-top-actions">
+          <button
+            type="button"
+            className={`compare-control ${compared ? 'compare-control-checked' : ''}`}
+            onClick={() => {
+              const res = toggleComparedListing(listing.id)
+              if (res.limitReached) {
+                alert('You can compare up to 3 properties side-by-side. Remove one from your comparison list to add this.')
+              }
+            }}
+            title={compared ? 'Remove from comparison' : 'Compare up to 3 homes side-by-side'}
+          >
+            {compared ? <CheckSquare size={14} className="compare-icon-checked" /> : <Square size={14} />}
+            <span>{compared ? 'In Comparison' : 'Compare'}</span>
+          </button>
           <a
             href={googleMapsUrl}
             target="_blank"
@@ -990,6 +1011,13 @@ export function LiveListingPage({ id, go }: { id: string; go: (page: string) => 
       return false
     }
   })
+  const [compared, setCompared] = useState(() => isListingCompared(id))
+
+  useEffect(() => {
+    const handleCompareSync = () => setCompared(isListingCompared(id))
+    window.addEventListener('campusnet_compare_change', handleCompareSync)
+    return () => window.removeEventListener('campusnet_compare_change', handleCompareSync)
+  }, [id])
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
@@ -1015,6 +1043,20 @@ export function LiveListingPage({ id, go }: { id: string; go: (page: string) => 
       <div className="detail-top-nav">
         <button className="back-link" onClick={() => go('search')}>← Back to search</button>
         <div className="detail-top-actions">
+          <button
+            type="button"
+            className={`compare-control ${compared ? 'compare-control-checked' : ''}`}
+            onClick={() => {
+              const res = toggleComparedListing(listing.id)
+              if (res.limitReached) {
+                alert('You can compare up to 3 properties side-by-side. Remove one from your comparison list to add this.')
+              }
+            }}
+            title={compared ? 'Remove from comparison' : 'Compare up to 3 homes side-by-side'}
+          >
+            {compared ? <CheckSquare size={14} className="compare-icon-checked" /> : <Square size={14} />}
+            <span>{compared ? 'In Comparison' : 'Compare'}</span>
+          </button>
           <a
             href={googleMapsUrl}
             target="_blank"
@@ -1206,7 +1248,17 @@ export function CompareSearchPage({
   initialCategory?: string
 }) {
   const [listings, setListings] = useState<Listing[]>([])
-  const [selected, setSelected] = useState<Listing[]>([])
+  const baseListings = supabase ? listings : sampleListings
+  const [selected, setSelected] = useState<Listing[]>(() => getComparedListings(baseListings))
+
+  useEffect(() => {
+    const handleCompareSync = () => {
+      setSelected(getComparedListings(baseListings))
+    }
+    handleCompareSync()
+    window.addEventListener('campusnet_compare_change', handleCompareSync)
+    return () => window.removeEventListener('campusnet_compare_change', handleCompareSync)
+  }, [baseListings])
   const [savedIds, setSavedIds] = useState<string[]>(() => {
     try {
       const raw = localStorage.getItem('campusnet_saved_listings')
@@ -1249,8 +1301,6 @@ export function CompareSearchPage({
         .catch((caught) => setError(caught instanceof Error ? caught.message : 'Could not load listings.'))
     }
   }, [activeFilters.query, activeFilters.category, activeFilters.roomType, activeFilters.gender])
-
-  const baseListings = supabase ? listings : sampleListings
 
   const available = useMemo(() => {
     return baseListings.filter((item) => {
@@ -1307,13 +1357,10 @@ export function CompareSearchPage({
   }, [baseListings, activeFilters])
 
   const toggle = (listing: Listing) => {
-    setSelected((current) =>
-      current.some((item) => item.id === listing.id)
-        ? current.filter((item) => item.id !== listing.id)
-        : current.length < 3
-        ? [...current, listing]
-        : current
-    )
+    const res = toggleComparedListing(listing.id)
+    if (res.limitReached) {
+      alert('You can compare up to 3 properties side-by-side. Remove one from your comparison list to add this.')
+    }
   }
 
   const applyFilters = (filters: ListingFilters) => {
@@ -1327,10 +1374,7 @@ export function CompareSearchPage({
   }
 
   const scrollToComparison = () => {
-    const el = document.getElementById('comparison-section')
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' })
-    }
+    go('compare')
   }
 
   return (
@@ -1455,7 +1499,7 @@ export function CompareSearchPage({
               <button className="solid-button" onClick={scrollToComparison}>
                 Compare Side-by-Side <ArrowRight size={15} />
               </button>
-              <button className="outline-button" onClick={() => setSelected([])}>
+              <button className="outline-button" onClick={() => clearComparedListings()}>
                 Clear
               </button>
             </div>
@@ -1473,7 +1517,7 @@ export function CompareSearchPage({
                 Full recurring breakdown, security deposits, distance to colleges, and amenities check.
               </p>
             </div>
-            <button className="outline-button" onClick={() => setSelected([])}>
+            <button className="outline-button" onClick={() => clearComparedListings()}>
               Clear comparison
             </button>
           </div>
@@ -1489,3 +1533,117 @@ export function CompareSearchPage({
 }
 
 function NaturalSearchBox({ onApply }: { onApply: (filters: ListingFilters) => void }) { const [prompt, setPrompt] = useState(''); const [busy, setBusy] = useState(false); const [message, setMessage] = useState(''); const submit = async (event: React.FormEvent) => { event.preventDefault(); setBusy(true); setMessage(''); try { const filters = await parseNaturalSearch(prompt); onApply({ ...filters, sort: 'updated' }); setMessage('Filters applied.'); } catch (caught) { setMessage(caught instanceof Error ? caught.message : 'Search assistant is unavailable. Normal filters are still available.') } finally { setBusy(false) } }; return <form className="natural-search" onSubmit={submit}><div><label htmlFor="natural-search-input">Describe your ideal place</label><textarea id="natural-search-input" value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Try: girls hostel below 9000 total monthly cost within 2 km of ABC College with food, Wi-Fi, and laundry." /><small>Optional AI assistance. Your text is converted into search filters only.</small></div><button className="solid-button" disabled={busy}>{busy ? 'Reading...' : 'Find matches'} <ArrowRight size={16} /></button>{message && <p className="natural-search-message">{message}</p>}</form> }
+
+
+export function ComparePage({ go }: { go: (page: string) => void }) {
+  const [comparedListings, setComparedListings] = useState<Listing[]>([])
+
+  const refresh = () => {
+    setComparedListings(getComparedListings())
+  }
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    refresh()
+    window.addEventListener('campusnet_compare_change', refresh)
+    return () => window.removeEventListener('campusnet_compare_change', refresh)
+  }, [])
+
+  const handleRemove = (listing: Listing) => {
+    toggleComparedListing(listing.id)
+  }
+
+  const handleClear = () => {
+    clearComparedListings()
+  }
+
+  return (
+    <section className="page-section compare-page-view">
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">MODULE 1 · SIDE-BY-SIDE PROPERTY COMPARISON</p>
+          <h1>Compare Accommodations in Pune</h1>
+          <p>
+            {comparedListings.length > 0
+              ? `Comparing ${comparedListings.length} of 3 properties side-by-side with full recurring costs and amenities.`
+              : 'Select 2 or 3 properties to compare rent, amenities, deposits, and distances side-by-side.'}
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <button className="outline-button" onClick={() => go('search')}>
+            <Search size={14} /> Find more homes
+          </button>
+          {comparedListings.length > 0 && (
+            <button className="text-action" onClick={handleClear} style={{ color: '#ad6656' }}>
+              Clear comparison
+            </button>
+          )}
+        </div>
+      </div>
+
+      {comparedListings.length >= 2 ? (
+        <div className="compare-table-container">
+          <ComparisonTable
+            listings={comparedListings}
+            onOpen={(item) => go(`listing/${item.id}`)}
+            onRemove={handleRemove}
+            onAddMore={comparedListings.length < 3 ? () => go('search') : undefined}
+          />
+        </div>
+      ) : comparedListings.length === 1 ? (
+        <div className="compare-single-notice">
+          <div className="compare-single-banner">
+            <Scale size={28} color="var(--coral)" />
+            <div>
+              <h3>1 property selected: <strong>{comparedListings[0].title}</strong></h3>
+              <p>Select at least 1 more property (up to 3 total) to view the side-by-side comparison table.</p>
+            </div>
+            <button className="solid-button" onClick={() => go('search')}>
+              Add Another Home to Compare <ArrowRight size={14} />
+            </button>
+          </div>
+
+          <h3 style={{ margin: '36px 0 16px', fontSize: 18 }}>Quick suggestions to compare with:</h3>
+          <div className="listing-grid">
+            {sampleListings
+              .filter(item => item.id !== comparedListings[0].id)
+              .slice(0, 3)
+              .map(listing => (
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  onOpen={() => go(`listing/${listing.id}`)}
+                />
+              ))}
+          </div>
+        </div>
+      ) : (
+        <div className="compare-empty-state">
+          <div className="compare-empty-icon-box">
+            <Scale size={42} color="var(--coral)" />
+          </div>
+          <h2>No properties selected for comparison yet</h2>
+          <p>
+            Compare up to 3 Pune hostels, PGs, or flats side-by-side. Click the <strong>"Compare"</strong> button on any home card while exploring.
+          </p>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 22 }}>
+            <button className="solid-button" onClick={() => go('search')}>
+              Explore Verified Homes <ArrowRight size={15} />
+            </button>
+          </div>
+
+          <h3 style={{ margin: '48px 0 16px', textAlign: 'left', fontSize: 18 }}>Popular Pune accommodations:</h3>
+          <div className="listing-grid">
+            {sampleListings.slice(0, 3).map(listing => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                onOpen={() => go(`listing/${listing.id}`)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
+  )
+}

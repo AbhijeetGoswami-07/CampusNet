@@ -84,6 +84,60 @@ export async function fetchSaved(): Promise<Listing[]> {
     return []
   }
 }
+
+export function getComparedListingIds(): string[] {
+  try {
+    const raw = localStorage.getItem('campusnet_compared_listings') || '[]'
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+export function toggleComparedListing(listingId: string): { ids: string[]; added: boolean; limitReached?: boolean } {
+  let ids = getComparedListingIds()
+  const exists = ids.includes(listingId)
+  let added = false
+  let limitReached = false
+
+  if (exists) {
+    ids = ids.filter(id => id !== listingId)
+  } else {
+    if (ids.length >= 3) {
+      limitReached = true
+      return { ids, added: false, limitReached: true }
+    } else {
+      ids.push(listingId)
+      added = true
+    }
+  }
+
+  try {
+    localStorage.setItem('campusnet_compared_listings', JSON.stringify(ids))
+    window.dispatchEvent(new Event('campusnet_compare_change'))
+  } catch {}
+
+  return { ids, added, limitReached }
+}
+
+export function clearComparedListings(): string[] {
+  try {
+    localStorage.removeItem('campusnet_compared_listings')
+    window.dispatchEvent(new Event('campusnet_compare_change'))
+  } catch {}
+  return []
+}
+
+export function isListingCompared(listingId: string): boolean {
+  return getComparedListingIds().includes(listingId)
+}
+
+export function getComparedListings(customPool?: Listing[]): Listing[] {
+  const ids = getComparedListingIds()
+  const pool: Listing[] = customPool && customPool.length > 0 ? customPool : (puneListings as Listing[])
+  return ids.map(id => pool.find(item => item.id === id)).filter((item): item is Listing => Boolean(item))
+}
 export async function sendEnquiry(listingId: string, message: string, contactPreference: string) {
   const listing = (puneListings as Listing[]).find(l => l.id === listingId)
   const title = listing?.title || 'Listing ' + listingId

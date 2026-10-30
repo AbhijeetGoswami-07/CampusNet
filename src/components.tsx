@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useState } from 'react'
-import { ArrowRight, BadgeCheck, CheckCircle2, ChevronRight, ExternalLink, Heart, LogOut, MapPin, Menu, Search, ShieldCheck, Star, User, Wifi, X } from 'lucide-react'
+import { ArrowRight, BadgeCheck, CheckCircle2, CheckSquare, ChevronRight, ExternalLink, Heart, LogOut, MapPin, Menu, Plus, Scale, Search, ShieldCheck, Square, Star, User, Wifi, X } from 'lucide-react'
+import { isListingCompared, toggleComparedListing, getComparedListings, clearComparedListings } from './data'
 import { MapContainer, Marker, Popup, TileLayer, Tooltip } from 'react-leaflet'
 import type { LatLngExpression } from 'leaflet'
 import { puneListings, type PuneListing } from './data-pune'
@@ -53,6 +54,28 @@ export const sampleListings: Listing[] = puneListings.map(p => ({
 
 export function Navbar({ onNavigate, active = 'home', signedIn = false, role, onLogout }: { onNavigate: (page: string) => void; active?: string; signedIn?: boolean; role?: 'student' | 'provider' | 'admin' | null; onLogout?: () => void }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [comparedCount, setComparedCount] = useState(() => {
+    try {
+      const raw = localStorage.getItem('campusnet_compared_listings')
+      return raw ? JSON.parse(raw).length : 0
+    } catch {
+      return 0
+    }
+  })
+
+  useEffect(() => {
+    const handleCompareSync = () => {
+      try {
+        const raw = localStorage.getItem('campusnet_compared_listings')
+        setComparedCount(raw ? JSON.parse(raw).length : 0)
+      } catch {
+        setComparedCount(0)
+      }
+    }
+    window.addEventListener('campusnet_compare_change', handleCompareSync)
+    return () => window.removeEventListener('campusnet_compare_change', handleCompareSync)
+  }, [])
+
   const navTo = (page: string) => {
     setMobileMenuOpen(false)
     onNavigate(page)
@@ -74,6 +97,10 @@ export function Navbar({ onNavigate, active = 'home', signedIn = false, role, on
 
       <nav aria-label="Main navigation" className={mobileMenuOpen ? 'nav-open' : ''}>
         <button className={active === 'search' ? 'nav-active' : ''} onClick={() => navTo('search')}>Find a home</button>
+        <button className={active === 'compare' ? 'nav-active nav-compare-btn' : 'nav-compare-btn'} onClick={() => navTo('compare')}>
+          Compare
+          {comparedCount > 0 && <span className="nav-compare-badge">{comparedCount}</span>}
+        </button>
         <button className={active === 'flatmates' ? 'nav-active' : ''} onClick={() => navTo('flatmates')}>Flatmates</button>
         <button className={active === 'services' ? 'nav-active' : ''} onClick={() => navTo('services')}>Services</button>
         <button className={active === 'expense-estimator' ? 'nav-active' : ''} onClick={() => navTo('expense-estimator')}>Expenses</button>
@@ -117,6 +144,7 @@ export function Footer({ onNavigate }: { onNavigate: (page: string) => void }) {
       </button>
       <div>
         <button onClick={() => onNavigate('search')}>Accommodations</button>
+        <button onClick={() => onNavigate('compare')}>Compare Homes</button>
         <button onClick={() => onNavigate('flatmates')}>Flatmates</button>
         <button onClick={() => onNavigate('services')}>Services</button>
         <button onClick={() => onNavigate('expense-estimator')}>Expenses</button>
@@ -174,7 +202,7 @@ export function ListingCard({
   onOpen,
   onSave,
   onCompare,
-  compareSelected = false,
+  compareSelected,
   saved = false
 }: {
   listing: Listing;
@@ -184,6 +212,28 @@ export function ListingCard({
   compareSelected?: boolean;
   saved?: boolean;
 }) {
+  const [internalCompared, setInternalCompared] = useState(() => isListingCompared(listing.id))
+
+  useEffect(() => {
+    const handleSync = () => setInternalCompared(isListingCompared(listing.id))
+    window.addEventListener('campusnet_compare_change', handleSync)
+    return () => window.removeEventListener('campusnet_compare_change', handleSync)
+  }, [listing.id])
+
+  const isSelected = compareSelected !== undefined ? compareSelected : internalCompared
+
+  const handleCompareClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (onCompare) {
+      onCompare()
+    } else {
+      const res = toggleComparedListing(listing.id)
+      if (res.limitReached) {
+        alert('You can compare up to 3 properties side-by-side. Remove one from your comparison list to add this.')
+      }
+    }
+  }
+
   const gmapUrl = `https://www.google.com/maps?q=${listing.latitude},${listing.longitude}+(${encodeURIComponent(listing.title)})`
 
   return (
@@ -239,21 +289,13 @@ export function ListingCard({
           <div className="card-actions">
             <button
               type="button"
-              className={`compare-control ${compareSelected ? 'compare-control-checked' : ''}`}
-              onClick={(e) => {
-                e.stopPropagation()
-                onCompare?.()
-              }}
-              title={compareSelected ? 'Remove from comparison' : 'Compare up to 3 homes side-by-side'}
+              className={`compare-control ${isSelected ? 'compare-control-checked' : ''}`}
+              onClick={handleCompareClick}
+              aria-pressed={isSelected}
+              title={isSelected ? 'Remove from comparison' : 'Compare up to 3 homes side-by-side'}
             >
-              <input
-                type="checkbox"
-                checked={compareSelected}
-                readOnly
-                tabIndex={-1}
-                aria-hidden="true"
-              />
-              <span>Compare</span>
+              {isSelected ? <CheckSquare size={13} className="compare-icon-checked" /> : <Square size={13} />}
+              <span>{isSelected ? 'Added' : 'Compare'}</span>
             </button>
             <button className="text-action" onClick={onOpen}>
               View details <ChevronRight size={15} />
@@ -545,11 +587,13 @@ export function CostBreakdown({ listing }: { listing: Listing }) { return <div c
 export function ComparisonTable({
   listings,
   onOpen,
-  onRemove
+  onRemove,
+  onAddMore
 }: {
   listings: Listing[];
   onOpen?: (listing: Listing) => void;
   onRemove?: (listing: Listing) => void;
+  onAddMore?: () => void;
 }) {
   const value = (text: string | number | null | undefined) =>
     text === null || text === undefined
@@ -558,11 +602,16 @@ export function ComparisonTable({
       ? text.toLocaleString('en-IN')
       : text
 
+  const totalCols = listings.length + (listings.length < 3 && onAddMore ? 1 : 0)
+  const rowStyle = {
+    gridTemplateColumns: `220px repeat(${Math.max(1, totalCols)}, minmax(220px, 1fr))`
+  }
+
   return (
     <div className="comparison-table-wrapper">
       <div className="comparison-table">
         {/* Header Row with Property Thumbnails, Titles, and Quick Actions */}
-        <div className="comparison-row comparison-cards-row">
+        <div className="comparison-row comparison-cards-row" style={rowStyle}>
           <div className="comparison-cell-label">
             <strong>Properties</strong>
             <small>{listings.length} of 3 selected</small>
@@ -573,6 +622,7 @@ export function ComparisonTable({
               <div key={item.id} className="comparison-prop-header">
                 {onRemove && (
                   <button
+                    type="button"
                     className="comparison-remove-btn"
                     onClick={() => onRemove(item)}
                     title="Remove from comparison"
@@ -604,10 +654,19 @@ export function ComparisonTable({
               </div>
             )
           })}
+          {listings.length < 3 && onAddMore && (
+            <div className="comparison-prop-header comparison-add-more-header" onClick={onAddMore} role="button" tabIndex={0} title="Search another property to compare">
+              <div className="comparison-add-more-box">
+                <Plus size={26} color="var(--coral)" />
+                <strong>+ Add 3rd Property</strong>
+                <small>Select from verified Pune homes</small>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Highlighted Monthly Recurring Total */}
-        <div className="comparison-row comparison-highlight-row">
+        <div className="comparison-row comparison-highlight-row" style={rowStyle}>
           <div className="comparison-cell-label">
             <b>Total Monthly Cost</b>
             <small>All recurring expenses</small>
@@ -619,6 +678,11 @@ export function ComparisonTable({
               {hasMissingCosts(item) && <span className="partial-cost-badge">*estimated</span>}
             </div>
           ))}
+          {listings.length < 3 && onAddMore && (
+            <div className="comparison-total-cell comparison-empty-cell">
+              <span style={{ color: 'var(--muted)', fontSize: 12 }}>—</span>
+            </div>
+          )}
         </div>
 
         {/* Breakdown Items */}
@@ -640,13 +704,18 @@ export function ComparisonTable({
           ['Rating', (item: Listing) => item.rating ? `⭐ ${item.rating} / 5` : '⭐ 4.6 / 5'],
           ['Verification', (item: Listing) => item.verified ? '🛡️ CampusNest Verified' : 'Pending review']
         ].map(([label, getValue]) => (
-          <div className="comparison-row" key={label as string}>
+          <div className="comparison-row" key={label as string} style={rowStyle}>
             <div className="comparison-cell-label">{label as string}</div>
             {listings.map((item) => (
               <div key={item.id} className="comparison-cell-val">
                 {value((getValue as (item: Listing) => string | number | null)(item))}
               </div>
             ))}
+            {listings.length < 3 && onAddMore && (
+              <div className="comparison-cell-val comparison-empty-cell">
+                <span style={{ color: 'var(--muted)', fontSize: 12 }}>—</span>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -654,6 +723,70 @@ export function ComparisonTable({
         * Total recurring sum incorporates rent, food, electricity, Wi-Fi, and maintenance. Verified 0 brokerage Pune housing.
       </small>
     </div>
+  )
+}
+
+export function CompareFloatingDock({ go }: { go: (page: string) => void }) {
+  const [comparedListings, setComparedListings] = useState<Listing[]>([])
+
+  useEffect(() => {
+    const sync = () => {
+      setComparedListings(getComparedListings())
+    }
+    sync()
+    window.addEventListener('campusnet_compare_change', sync)
+    return () => window.removeEventListener('campusnet_compare_change', sync)
+  }, [])
+
+  if (comparedListings.length === 0) return null
+
+  // Do not show floating dock on the dedicated compare page itself
+  if (typeof window !== 'undefined' && window.location.hash.startsWith('#compare')) {
+    return null
+  }
+
+  return (
+    <aside className="compare-floating-dock" aria-label="Selected properties comparison dock">
+      <div className="compare-dock-inner">
+        <div className="compare-dock-left">
+          <span className="compare-dock-badge">{comparedListings.length}/3 Selected</span>
+          <div className="compare-dock-chips">
+            {comparedListings.map((item) => (
+              <div key={item.id} className="compare-dock-chip">
+                <img src={item.image} alt={item.title} />
+                <span>{item.title}</span>
+                <button
+                  type="button"
+                  onClick={() => toggleComparedListing(item.id)}
+                  aria-label={`Remove ${item.title} from comparison`}
+                  title="Remove from comparison"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="compare-dock-right">
+          <button
+            type="button"
+            className="solid-button"
+            onClick={() => go('compare')}
+            style={{ padding: '8px 16px', fontSize: 12, fontWeight: 700 }}
+          >
+            Compare Side-by-Side ({comparedListings.length}) <ArrowRight size={14} />
+          </button>
+          <button
+            type="button"
+            className="outline-button"
+            onClick={() => clearComparedListings()}
+            style={{ padding: '7px 12px', fontSize: 11 }}
+          >
+            Clear
+          </button>
+        </div>
+      </div>
+    </aside>
   )
 }
 
