@@ -2047,6 +2047,7 @@ export const puneServices: Service[] = [
   // Mess & Tiffin Services
   {
     id: 'annapurna-mess',
+    image: '/services/annapurna-maharashtrian-thali.jpg',
     name: 'Annapurna Veg Mess',
     category: 'mess',
     address: '47, FC Road, Shivajinagar',
@@ -2061,6 +2062,7 @@ export const puneServices: Service[] = [
   },
   {
     id: 'vaishali-restaurant',
+    image: '/services/vaishali-masala-dosa.jpg',
     name: 'Café Vaishali',
     category: 'mess',
     address: '1200/A, Fergusson College Road',
@@ -2075,6 +2077,7 @@ export const puneServices: Service[] = [
   },
   {
     id: 'roopali-restaurant',
+    image: '/services/roopali-idli-sambar.jpg',
     name: 'Hotel Roopali',
     category: 'mess',
     address: 'FC Road, Deccan Gymkhana',
@@ -2089,6 +2092,7 @@ export const puneServices: Service[] = [
   },
   {
     id: 'durga-tiffin',
+    image: '/services/durga-tiffin-dabba.jpg',
     name: 'Durga Homemade Tiffin Service',
     category: 'mess',
     address: '12, Prabhat Road, Lane 4, Kothrud',
@@ -2103,6 +2107,7 @@ export const puneServices: Service[] = [
   },
   {
     id: 'spice-garden-mess',
+    image: '/services/spice-garden-paneer.jpg',
     name: 'Spice Garden Student Mess',
     category: 'mess',
     address: '8, Karve Road, Near Dashabhuja Ganpati',
@@ -2118,6 +2123,7 @@ export const puneServices: Service[] = [
   // Additional Authentic Student Messes around Pune Campuses
   {
     id: 'shreyas-dining-mess',
+    image: '/services/shreyas-pune-thali.jpg',
     name: 'Shreyas Dining Hall & Student Mess',
     category: 'mess',
     address: 'Apte Road, Deccan Gymkhana, Near FC Road',
@@ -2132,6 +2138,7 @@ export const puneServices: Service[] = [
   },
   {
     id: 'mathura-veg-mess',
+    image: '/services/badshahi-indian-thali.jpg',
     name: 'Mathura Pure Veg Student Mess',
     category: 'mess',
     address: '112, FC Road, Opposite Fergusson College Main Gate',
@@ -2146,6 +2153,7 @@ export const puneServices: Service[] = [
   },
   {
     id: 'mayur-thali-kothrud',
+    image: '/services/gujarati-thali-pune.jpg',
     name: 'Mayur Maharashtrian Mess',
     category: 'mess',
     address: '14, Paud Road, Opposite MIT World Peace University Gate',
@@ -2835,7 +2843,7 @@ export const puneServices: Service[] = [
     description: "Authentic Maharashtrian unlimited thali with chapati, bhakri, two sabzis, dal, rice, and Sunday sweet.",
     collegeName: "COEP Technological University",
     source: "Justdial Verified",
-    image: '/services/mess-thali-veg.jpg'
+    image: '/services/gujarati-thali-pune.jpg'
   },
   {
     id: "sulekha-swaraj-veg-mess-fc",

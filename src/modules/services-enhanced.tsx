@@ -24,20 +24,55 @@ const CATEGORY_COLORS: Record<string, string> = {
   salon: '#8b5cf6'
 }
 
-export function getDefaultServiceImage(cat: string): string {
-  switch (cat) {
-    case 'mess': return '/services/mess-thali-veg.jpg'
-    case 'library': return '/services/abhyasika-study-hall.jpg'
-    case 'laundry': return '/services/laundromat.jpg'
-    case 'medical': return '/services/pharmacy.jpg'
-    case 'grocery': return '/services/supermarket.jpg'
-    case 'salon': return '/services/salon.jpg'
-    default: return '/services/mess-thali-veg.jpg'
-  }
+const SERVICE_FALLBACK_POOLS: Record<string, string[]> = {
+  mess: [
+    '/services/annapurna-maharashtrian-thali.jpg',
+    '/services/vaishali-masala-dosa.jpg',
+    '/services/roopali-idli-sambar.jpg',
+    '/services/durga-tiffin-dabba.jpg',
+    '/services/spice-garden-paneer.jpg',
+    '/services/shreyas-pune-thali.jpg',
+    '/services/sukanta-rajasthani-thali.jpg',
+    '/services/badshahi-indian-thali.jpg',
+    '/services/wadeshwar-pav-bhaji.jpg',
+    '/services/punjabi-chole-bhature.jpg',
+    '/services/sagar-dal-makhani.jpg',
+    '/services/south-indian-bhojanam.jpg',
+    '/services/gujarati-thali-pune.jpg',
+    '/services/dabbawala-tiffin-service.jpg'
+  ],
+  laundry: [
+    '/services/laundromat.jpg',
+    '/services/laundry-care.jpg'
+  ],
+  library: [
+    '/services/abhyasika-study-hall.jpg',
+    '/services/digital-library.jpg',
+    '/services/library-1.jpg'
+  ],
+  medical: [
+    '/services/medical-chemist-store.jpg',
+    '/services/pharmacy.jpg',
+    '/services/emergency-clinic.jpg'
+  ],
+  grocery: [
+    '/services/supermarket.jpg'
+  ],
+  salon: [
+    '/services/salon.jpg'
+  ]
+}
+
+export function getDefaultServiceImage(cat: string, seed: string = ''): string {
+  const pool = SERVICE_FALLBACK_POOLS[cat] || SERVICE_FALLBACK_POOLS.mess
+  if (!seed) return pool[0]
+  let hash = 0
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0
+  return pool[hash % pool.length]
 }
 
 function ServiceCard({ service }: { service: Service }) {
-  const imgSrc = service.image || getDefaultServiceImage(service.category)
+  const imgSrc = service.image || getDefaultServiceImage(service.category, service.id)
   return (
     <article className="service-detail-card" style={{ padding: 0, overflow: 'hidden' }}>
       <div style={{ position: 'relative', width: '100%', height: 160, background: '#f8fafc' }}>
@@ -47,7 +82,7 @@ function ServiceCard({ service }: { service: Service }) {
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           loading="lazy"
           onError={(e) => {
-            (e.target as HTMLImageElement).src = getDefaultServiceImage(service.category)
+            (e.target as HTMLImageElement).src = getDefaultServiceImage(service.category, service.id)
           }}
         />
         <span
