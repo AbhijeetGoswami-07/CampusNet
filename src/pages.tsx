@@ -14,6 +14,9 @@ import { UnderDevelopmentModule } from './modules/under-development'
 export { FlatmateMatchingPage, ExpenseEstimatorPage, CollegesNearbyPage, EnhancedServicesPage, FullMapPage, SettingsPage, UnderDevelopmentModule }
 
 export function HomePage({ go }: { go: (page: string) => void }) {
+  const [showAllHomes, setShowAllHomes] = useState(false)
+  const homeDisplayListings = showAllHomes ? sampleListings : sampleListings.slice(0, 9)
+
   return (
     <>
       <section className="portal-hero">
@@ -110,9 +113,35 @@ export function HomePage({ go }: { go: (page: string) => void }) {
         </div>
         <CategorySelector onSelect={(cat) => go(cat === 'All homes' ? 'search' : `search?category=${encodeURIComponent(cat.toLowerCase().replace(/s$/, ''))}`)} />
         <div className="listing-grid">
-          {sampleListings.map((listing) => (
+          {homeDisplayListings.map((listing) => (
             <ListingCard key={listing.id} listing={listing} onOpen={() => go(`listing/${listing.id}`)} />
           ))}
+        </div>
+        <div style={{ textAlign: 'center', marginTop: 32, display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
+          {!showAllHomes ? (
+            <button
+              className="outline-button"
+              style={{ padding: '12px 24px', fontSize: 13 }}
+              onClick={() => setShowAllHomes(true)}
+            >
+              Show all 24 verified homes ({sampleListings.length - 9} more)
+            </button>
+          ) : (
+            <button
+              className="outline-button"
+              style={{ padding: '12px 24px', fontSize: 13 }}
+              onClick={() => setShowAllHomes(false)}
+            >
+              Show 3 rows only
+            </button>
+          )}
+          <button
+            className="solid-button"
+            style={{ padding: '12px 28px', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 8 }}
+            onClick={() => go('search')}
+          >
+            Explore on Interactive Map <ArrowRight size={16} />
+          </button>
         </div>
       </section>
 
