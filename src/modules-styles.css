@@ -10,7 +10,7 @@
 .page-section,
 .info-page,
 .modules-showcase {
-  max-width: 1220px !important;
+  max-width: 1680px !important;
   margin-left: auto !important;
   margin-right: auto !important;
   padding-left: 24px !important;
@@ -135,7 +135,7 @@
    FOOTER ALIGNMENT
    -------------------------------------------------------------------------- */
 .site-footer {
-  max-width: 1220px !important;
+  max-width: 1680px !important;
   margin: auto !important;
   padding: 36px 24px !important;
   display: flex !important;
@@ -227,10 +227,10 @@
    -------------------------------------------------------------------------- */
 .search-layout-compare {
   display: grid;
-  grid-template-columns: 250px minmax(0, 1fr) 380px;
-  gap: 24px;
+  grid-template-columns: 280px minmax(0, 1.4fr) minmax(420px, 0.95fr);
+  gap: 28px;
   align-items: start;
-  margin-top: 24px;
+  margin-top: 20px;
 }
 
 .search-filter-sidebar {
@@ -248,10 +248,13 @@
 .search-map {
   position: sticky;
   top: 90px;
-  height: 600px;
+  height: calc(100vh - 120px);
+  min-height: 580px;
+  max-height: 850px;
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 12px;
   overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
 }
 
 .search-map .map-view,

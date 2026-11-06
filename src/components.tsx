@@ -36,10 +36,12 @@ export type Listing = {
   laundry: boolean;
   wifi: boolean;
   collegeName?: string;
+  source?: string;
 }
 
 export const sampleListings: Listing[] = puneListings.map(p => ({
   ...p,
+  source: p.source,
   collegeName: p.collegeName,
   images: [
     p.image,
@@ -237,8 +239,8 @@ export function ListingCard({
   const gmapUrl = `https://www.google.com/maps?q=${listing.latitude},${listing.longitude}+(${encodeURIComponent(listing.title)})`
 
   return (
-    <article className="component-listing-card">
-      <button className="card-image" onClick={onOpen}>
+    <article className="component-listing-card horizontal-card">
+      <div className="card-image-wrap" onClick={onOpen}>
         <img
           src={listing.image}
           alt={`${listing.title} interior`}
@@ -247,58 +249,122 @@ export function ListingCard({
             (e.currentTarget as HTMLImageElement).src = '/hostels/hostel-room-1.jpg'
           }}
         />
-        <span>{listing.category}</span>
-      </button>
+        {/* In small left of the image mention what kind of accommodation it is */}
+        <span className="card-category-badge">{listing.category}</span>
+
+        {/* Wishlist quick overlay on image */}
+        <button
+          type="button"
+          className={`card-wishlist-overlay ${saved ? 'saved' : ''}`}
+          onClick={(e) => {
+            e.stopPropagation()
+            onSave?.()
+          }}
+          aria-label={saved ? 'Remove from wishlist' : 'Save to wishlist'}
+          title={saved ? 'Remove from wishlist' : 'Save to wishlist'}
+        >
+          <Heart size={16} fill={saved ? '#ef4444' : 'rgba(0,0,0,0.3)'} color={saved ? '#ef4444' : '#ffffff'} />
+        </button>
+      </div>
+
       <div className="card-content">
-        <div className="card-title-row">
-          <div>
-            <h3>{listing.title}</h3>
-            <p>
-              <MapPin size={13} /> {listing.locality}, {listing.city}
-              <a
-                href={gmapUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="card-gmap-pill"
-                onClick={(e) => e.stopPropagation()}
-                title="View on Google Maps"
-              >
-                🗺️ Maps
-              </a>
-            </p>
+        <div>
+          <div className="card-title-row">
+            <h3 onClick={onOpen} style={{ cursor: 'pointer' }} title={listing.title}>
+              {listing.title}
+            </h3>
+            <button
+              type="button"
+              className={`card-wishlist-icon-btn ${saved ? 'saved' : ''}`}
+              onClick={onSave}
+              aria-label={saved ? 'Remove from wishlist' : 'Save to wishlist'}
+              title={saved ? 'In Wishlist' : 'Add to Wishlist'}
+            >
+              <Heart size={17} fill={saved ? '#ef4444' : 'none'} color={saved ? '#ef4444' : '#64748b'} />
+            </button>
           </div>
-          <button
-            className={saved ? 'save-control saved' : 'save-control'}
-            onClick={onSave}
-            aria-label={saved ? 'Remove from saved listings' : 'Save listing'}
-          >
-            <Heart size={17} fill={saved ? 'currentColor' : 'none'} />
-          </button>
+
+          <div className="card-location-row">
+            <span className="card-loc-text">
+              <MapPin size={13} /> {listing.locality}, {listing.city}
+            </span>
+            <a
+              href={gmapUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="card-gmap-pill"
+              onClick={(e) => e.stopPropagation()}
+              title="View on Google Maps"
+            >
+              🗺️ Maps
+            </a>
+            {listing.collegeName && (
+              <span className="card-college-proximity-chip">
+                🎓 Near {listing.collegeName} {listing.distance !== null ? `(${listing.distance} km)` : ''}
+              </span>
+            )}
+          </div>
         </div>
-        <div className="card-meta">
+
+        <div className="card-meta-row">
           <VerificationBadge />
+          {listing.source && (
+            <span className="card-source-chip">
+              ✓ {listing.source}
+            </span>
+          )}
           <VacancyStatus available={listing.available} total={listing.total} />
         </div>
-        <div className="card-services">
-          <span>{listing.roomType}</span>
-          {listing.wifi && <span><Wifi size={13} /> Wi-Fi</span>}
-          {listing.food && <span>Food</span>}
+
+        <div className="card-services-row">
+          <span className="card-service-pill">{listing.roomType}</span>
+          {listing.wifi && <span className="card-service-pill"><Wifi size={12} /> Wi-Fi</span>}
+          {listing.food && <span className="card-service-pill">🍽️ Food</span>}
+          {listing.laundry && <span className="card-service-pill">🧺 Laundry</span>}
+          {listing.genderPreference && (
+            <span className="card-gender-pill">
+              {listing.genderPreference} Only
+            </span>
+          )}
         </div>
-        <div className="card-price">
-          <span><b>₹{listing.price.toLocaleString('en-IN')}</b> / month</span>
-          <div className="card-actions">
+
+        <div className="card-bottom-bar">
+          <div className="card-price-block">
+            <div className="card-rent">
+              <b>₹{listing.price.toLocaleString('en-IN')}</b>
+              <small>/ month</small>
+            </div>
+            {listing.securityDeposit ? (
+              <div className="card-deposit-sub">
+                Deposit: ₹{listing.securityDeposit.toLocaleString('en-IN')}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="card-actions-group">
             <button
               type="button"
               className={`compare-control ${isSelected ? 'compare-control-checked' : ''}`}
               onClick={handleCompareClick}
               aria-pressed={isSelected}
-              title={isSelected ? 'Remove from comparison' : 'Compare up to 3 homes side-by-side'}
+              title={isSelected ? 'Remove from comparison' : 'Compare up to 3 properties'}
             >
-              {isSelected ? <CheckSquare size={13} className="compare-icon-checked" /> : <Square size={13} />}
-              <span>{isSelected ? 'Added' : 'Compare'}</span>
+              {isSelected ? <CheckSquare size={14} className="compare-icon-checked" /> : <Square size={14} />}
+              <span>{isSelected ? 'Added to Compare' : 'Compare'}</span>
             </button>
-            <button className="text-action" onClick={onOpen}>
-              View details <ChevronRight size={15} />
+
+            <button
+              type="button"
+              className={`wishlist-control-btn ${saved ? 'saved' : ''}`}
+              onClick={onSave}
+              title={saved ? 'Remove from Wishlist' : 'Add to Wishlist'}
+            >
+              <Heart size={14} fill={saved ? '#ef4444' : 'none'} color={saved ? '#ef4444' : 'currentColor'} />
+              <span>{saved ? 'Wishlisted' : 'Wishlist'}</span>
+            </button>
+
+            <button type="button" className="view-detail-btn" onClick={onOpen}>
+              View details <ChevronRight size={14} />
             </button>
           </div>
         </div>

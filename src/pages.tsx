@@ -1363,7 +1363,13 @@ export function CompareSearchPage({
     }
   }
 
+  const [currentPage, setCurrentPage] = useState(1)
+  const PAGE_SIZE = 8
+  const totalPages = Math.max(1, Math.ceil(available.length / PAGE_SIZE))
+  const paginatedListings = available.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+
   const applyFilters = (filters: ListingFilters) => {
+    setCurrentPage(1)
     const nextFilters = { ...filters, sort: 'updated' as const }
     setActiveFilters(nextFilters)
     if (supabase) {
@@ -1420,8 +1426,42 @@ export function CompareSearchPage({
         </aside>
 
         <div className="result-stack">
+          {/* Quick Category Filter Bar */}
+          <div className="search-quick-category-tabs">
+            <button
+              type="button"
+              className={`quick-cat-pill ${!activeFilters.category || activeFilters.category === 'all' ? 'active' : ''}`}
+              onClick={() => applyFilters({ ...activeFilters, category: undefined })}
+            >
+              All Accommodations ({available.length})
+            </button>
+            <button
+              type="button"
+              className={`quick-cat-pill ${activeFilters.category === 'PG' ? 'active' : ''}`}
+              onClick={() => applyFilters({ ...activeFilters, category: 'PG' })}
+            >
+              🏠 PGs ({baseListings.filter(l => l.category === 'PG').length})
+            </button>
+            <button
+              type="button"
+              className={`quick-cat-pill ${activeFilters.category === 'Hostel' ? 'active' : ''}`}
+              onClick={() => applyFilters({ ...activeFilters, category: 'Hostel' })}
+            >
+              🏢 Hostels ({baseListings.filter(l => l.category === 'Hostel').length})
+            </button>
+            <button
+              type="button"
+              className={`quick-cat-pill ${activeFilters.category === 'Flat' ? 'active' : ''}`}
+              onClick={() => applyFilters({ ...activeFilters, category: 'Flat' })}
+            >
+              🛋️ Flats & Shares ({baseListings.filter(l => l.category === 'Flat').length})
+            </button>
+          </div>
+
           <div className="result-toolbar">
-            <b>{available.length} verified homes found</b>
+            <b>
+              Showing {available.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, available.length)} of {available.length} verified accommodations
+            </b>
             <span style={{ fontSize: 12, color: 'var(--muted)' }}>
               Check 'Compare' on any 2 or 3 cards to view side-by-side
             </span>
@@ -1454,7 +1494,7 @@ export function CompareSearchPage({
               </button>
             </div>
           ) : (
-            available.map((listing) => (
+            paginatedListings.map((listing) => (
               <ListingCard
                 key={listing.id}
                 listing={listing}
@@ -1465,6 +1505,53 @@ export function CompareSearchPage({
                 compareSelected={selected.some((item) => item.id === listing.id)}
               />
             ))
+          )}
+
+          {totalPages > 1 && (
+            <div className="search-pagination-bar">
+              <button
+                type="button"
+                className="pagination-btn"
+                disabled={currentPage === 1}
+                onClick={() => {
+                  setCurrentPage(p => Math.max(1, p - 1))
+                  const el = document.querySelector('.result-toolbar')
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }}
+              >
+                ← Previous Page
+              </button>
+
+              <div className="pagination-numbers">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(num => (
+                  <button
+                    key={num}
+                    type="button"
+                    className={`pagination-num ${currentPage === num ? 'active' : ''}`}
+                    onClick={() => {
+                      setCurrentPage(num)
+                      const el = document.querySelector('.result-toolbar')
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }}
+                  >
+                    {num}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                className="pagination-btn"
+                disabled={currentPage === totalPages}
+                onClick={() => {
+                  setCurrentPage(p => Math.min(totalPages, p + 1))
+                  const el = document.querySelector('.result-toolbar')
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                }}
+              >
+                Next Page →
+              </button>
+            </div>
           )}
         </div>
 
