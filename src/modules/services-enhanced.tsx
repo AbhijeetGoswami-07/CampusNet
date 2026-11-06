@@ -1,14 +1,15 @@
-import { GoogleMapView, type GoogleMapMarker } from '../components/google-map-view'
+import { GoogleMapView } from '../components/google-map-view'
 import { useState } from 'react'
-import { MapPin, Phone, Clock, Star, Search, ExternalLink } from 'lucide-react'
+import { MapPin, Phone, Clock, Star, Search, ExternalLink, GraduationCap } from 'lucide-react'
 import { MapContainer, Marker, Popup, TileLayer, Tooltip } from 'react-leaflet'
 import type { LatLngExpression } from 'leaflet'
-import { puneServices, type Service } from '../data-pune'
+import { puneServices, puneColleges, type Service } from '../data-pune'
 import { getCustomMapIcon } from './colleges'
 
 const CATEGORY_LABELS: Record<string, string> = {
   mess: '🍽️ Mess & Tiffin',
   laundry: '👕 Laundry & Dry Cleaning',
+  library: '📚 Libraries & Abhyasikas',
   medical: '🏥 Medical & Hospitals',
   grocery: '🛒 Grocery & Supermarket',
   salon: '✂️ Salons & Grooming'
@@ -17,6 +18,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 const CATEGORY_COLORS: Record<string, string> = {
   mess: '#e67555',
   laundry: '#06b6d4',
+  library: '#6366f1',
   medical: '#ef4444',
   grocery: '#4a9e7d',
   salon: '#8b5cf6'
@@ -29,17 +31,49 @@ function ServiceCard({ service }: { service: Service }) {
         <span
           className="service-cat-badge"
           style={{
-            background: CATEGORY_COLORS[service.category] + '20',
-            color: CATEGORY_COLORS[service.category]
+            background: (CATEGORY_COLORS[service.category] || '#6366f1') + '20',
+            color: CATEGORY_COLORS[service.category] || '#6366f1'
           }}
         >
-          {CATEGORY_LABELS[service.category]}
+          {CATEGORY_LABELS[service.category] || service.category}
         </span>
         <span className="service-rating">
           <Star size={13} fill="#d97706" color="#d97706" /> {service.rating}
         </span>
       </div>
       <h3>{service.name}</h3>
+
+      {service.collegeName && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '3px 0 8px', flexWrap: 'wrap' }}>
+          <span style={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: '#4338ca',
+            background: '#eef2ff',
+            padding: '2px 8px',
+            borderRadius: 12,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4
+          }}>
+            <GraduationCap size={12} /> Near {service.collegeName}
+          </span>
+          {service.source && (
+            <span style={{
+              fontSize: 10,
+              fontWeight: 600,
+              color: '#15803d',
+              background: '#f0fdf4',
+              border: '1px solid #bbf7d0',
+              padding: '1px 6px',
+              borderRadius: 4
+            }}>
+              ✓ {service.source}
+            </span>
+          )}
+        </div>
+      )}
+
       <p className="service-address"><MapPin size={13} /> {service.address}</p>
       <p className="service-timing"><Clock size={13} /> {service.timing}</p>
       <p className="service-desc">{service.description}</p>
@@ -67,17 +101,24 @@ function ServiceCard({ service }: { service: Service }) {
 
 export function EnhancedServicesPage() {
   const [activeCategory, setActiveCategory] = useState<string>('all')
+  const [selectedCollege, setSelectedCollege] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [showMap, setShowMap] = useState(false)
   const [mapEngine, setMapEngine] = useState<'google' | 'leaflet'>('google')
 
-  const categories = ['all', 'mess', 'laundry', 'medical', 'grocery', 'salon']
+  const categories = ['all', 'mess', 'laundry', 'library', 'medical', 'grocery', 'salon']
 
   const filtered = puneServices.filter(s => {
     if (activeCategory !== 'all' && s.category !== activeCategory) return false
+    if (selectedCollege !== 'all' && s.collegeName !== selectedCollege) return false
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
-      return s.name.toLowerCase().includes(q) || s.locality.toLowerCase().includes(q) || s.address.toLowerCase().includes(q)
+      return (
+        s.name.toLowerCase().includes(q) ||
+        s.locality.toLowerCase().includes(q) ||
+        s.address.toLowerCase().includes(q) ||
+        (s.collegeName && s.collegeName.toLowerCase().includes(q))
+      )
     }
     return true
   })
@@ -90,7 +131,7 @@ export function EnhancedServicesPage() {
         <div>
           <p className="eyebrow">MODULE 3 · ESSENTIAL SERVICES</p>
           <h1>Everyday Student Services across Pune</h1>
-          <p>Verified tiffin services, laundry pickup, 24/7 pharmacies, groceries, and student salons.</p>
+          <p>Verified tiffin services, laundromats, 24/7 study libraries (abhyasikas), pharmacies, and groceries near colleges.</p>
         </div>
         <div className="view-toggle" role="group">
           <button className={!showMap ? 'selected' : ''} onClick={() => setShowMap(false)}>
@@ -102,6 +143,53 @@ export function EnhancedServicesPage() {
         </div>
       </div>
 
+      {/* College Proximity Filter Bar */}
+      <div style={{
+        display: 'flex',
+        gap: 12,
+        alignItems: 'center',
+        background: '#f8fafc',
+        border: '1px solid #e2e8f0',
+        padding: '10px 16px',
+        borderRadius: 14,
+        marginBottom: 16,
+        flexWrap: 'wrap'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: '#334155' }}>
+          <GraduationCap size={17} color="#4f46e5" /> Filter by Campus Proximity:
+        </div>
+        <select
+          value={selectedCollege}
+          onChange={e => setSelectedCollege(e.target.value)}
+          style={{
+            padding: '7px 14px',
+            borderRadius: 20,
+            border: '1px solid #cbd5e1',
+            fontSize: 13,
+            fontWeight: 500,
+            background: '#ffffff',
+            color: '#1e293b',
+            cursor: 'pointer',
+            minWidth: 260
+          }}
+        >
+          <option value="all">📍 All Colleges & Pune City (Show All)</option>
+          {puneColleges.map(c => (
+            <option key={c.id} value={c.name}>{c.shortName} — {c.name}</option>
+          ))}
+        </select>
+        {selectedCollege !== 'all' && (
+          <button
+            type="button"
+            className="outline-button"
+            style={{ fontSize: 12, padding: '5px 12px', borderRadius: 16 }}
+            onClick={() => setSelectedCollege('all')}
+          >
+            Clear Campus Filter ✕
+          </button>
+        )}
+      </div>
+
       <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center', marginBottom: 20 }}>
         <div className="services-category-tabs" style={{ marginBottom: 0, flex: 1 }}>
           {categories.map(cat => (
@@ -110,7 +198,7 @@ export function EnhancedServicesPage() {
               className={`service-tab ${activeCategory === cat ? 'service-tab-active' : ''}`}
               onClick={() => setActiveCategory(cat)}
             >
-              {cat === 'all' ? '✨ All Services' : CATEGORY_LABELS[cat]}
+              {cat === 'all' ? '✨ All Services' : CATEGORY_LABELS[cat] || cat}
             </button>
           ))}
         </div>
@@ -118,7 +206,7 @@ export function EnhancedServicesPage() {
           <Search size={15} style={{ position: 'absolute', left: 10, top: 11, color: 'var(--muted)' }} />
           <input
             type="text"
-            placeholder="Search service, area..."
+            placeholder="Search service, area, college..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             style={{
@@ -165,8 +253,8 @@ export function EnhancedServicesPage() {
               markers={filtered.map(s => {
                 const isDMart = s.name.toLowerCase().includes('dmart');
                 const isJioMart = s.name.toLowerCase().includes('jiomart') || s.name.toLowerCase().includes('smart');
-                const badgeColor = isDMart ? '#059669' : isJioMart ? '#2563eb' : '#0891b2';
-                const badgeText = isDMart ? '🛒 OFFICIAL DMART' : isJioMart ? '🛍️ JIOMART / SMART' : CATEGORY_LABELS[s.category];
+                const badgeColor = isDMart ? '#059669' : isJioMart ? '#2563eb' : (CATEGORY_COLORS[s.category] || '#0891b2');
+                const badgeText = isDMart ? '🛒 OFFICIAL DMART' : isJioMart ? '🛍️ JIOMART / SMART' : (CATEGORY_LABELS[s.category] || s.category);
                 return {
                   id: s.id,
                   position: { lat: s.latitude, lng: s.longitude },
@@ -200,7 +288,7 @@ export function EnhancedServicesPage() {
                 <Popup>
                   <div className="map-popup">
                     <strong>{s.name}</strong>
-                    <span>{CATEGORY_LABELS[s.category]}</span>
+                    <span>{CATEGORY_LABELS[s.category] || s.category}</span>
                     <span>{s.address}</span>
                     <span>{s.timing}</span>
                     <span><strong>{s.priceRange}</strong> · ⭐ {s.rating}</span>
@@ -230,7 +318,7 @@ export function EnhancedServicesPage() {
             filtered.map(s => <ServiceCard key={s.id} service={s} />)
           ) : (
             <div className="empty-state" style={{ gridColumn: '1/-1' }}>
-              <p>No services found matching your criteria. Try switching category tabs or clearing your search.</p>
+              <p>No services found matching your criteria. Try switching category tabs or clearing your search / college filter.</p>
             </div>
           )}
         </div>

@@ -39,6 +39,9 @@ export const getCustomMapIcon = (type: string) => {
   } else if (t === 'salon') {
     markerClass = 'marker-salon'
     svgContent = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>`
+  } else if (t === 'library' || t === 'study' || t === 'abhyasika') {
+    markerClass = 'marker-library'
+    svgContent = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`
   } else {
     markerClass = 'marker-service'
     svgContent = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`
@@ -705,6 +708,11 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
                               <span>{l.locality}</span>
                               <span>·</span>
                               <span>{l.roomType}</span>
+                              {l.source && (
+                                <span style={{ fontSize: 10, background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0', padding: '1px 6px', borderRadius: 4, fontWeight: 600 }}>
+                                  ✓ {l.source}
+                                </span>
+                              )}
                             </div>
                             <div className="listing-price-row">
                               <span style={{ color: 'var(--coral)', fontWeight: 800 }}>
@@ -754,6 +762,11 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
                               <span style={{ fontSize: 12, color: 'var(--muted)' }}>
                                 <Star size={11} fill="#e67555" color="#e67555" style={{ display: 'inline' }} /> {m.rating}
                               </span>
+                              {m.source && (
+                                <span style={{ fontSize: 10, background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0', padding: '1px 5px', borderRadius: 4, fontWeight: 600 }}>
+                                  ✓ {m.source}
+                                </span>
+                              )}
                             </div>
                             <p style={{ fontSize: 12, color: 'var(--muted)', margin: 0 }}>
                               <Clock size={11} style={{ display: 'inline', marginRight: 4 }} />
@@ -814,6 +827,11 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
                                 <MapPin size={11} /> {s.calcDist.toFixed(1)} km from campus
                               </span>
                               <span style={{ fontSize: 13, color: 'var(--ink)', fontWeight: 600 }}>{s.priceRange}</span>
+                              {s.source && (
+                                <span style={{ fontSize: 10, background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0', padding: '1px 5px', borderRadius: 4, fontWeight: 600 }}>
+                                  ✓ {s.source}
+                                </span>
+                              )}
                             </div>
                             <p style={{ fontSize: 12, color: 'var(--muted)', margin: 0 }}>
                               <Clock size={11} style={{ display: 'inline', marginRight: 4 }} />
@@ -873,6 +891,11 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
                                 <MapPin size={11} /> {s.calcDist.toFixed(1)} km from campus
                               </span>
                               <span style={{ fontSize: 12, color: '#ef4444', fontWeight: 700 }}>24/7 Available</span>
+                              {s.source && (
+                                <span style={{ fontSize: 10, background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0', padding: '1px 5px', borderRadius: 4, fontWeight: 600 }}>
+                                  ✓ {s.source}
+                                </span>
+                              )}
                             </div>
                             <p style={{ fontSize: 12, color: 'var(--muted)', margin: 0 }}>
                               <Clock size={11} style={{ display: 'inline', marginRight: 4 }} />
