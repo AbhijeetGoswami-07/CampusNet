@@ -796,9 +796,11 @@ export function ImageGallery({ listing }: { listing: Listing }) {
     : [
         listing.image,
         listing.category === 'Flat'
-          ? 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=800&q=80'
-          : 'https://images.unsplash.com/photo-1582533561751-ef6f6ab93a2e?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=800&q=80'
+          ? '/hostels/flat-2.jpg'
+          : '/hostels/hostel-room-2.jpg',
+        listing.category === 'Flat'
+          ? '/hostels/flat-3.jpg'
+          : '/hostels/hostel-room-3.jpg'
       ]
 
   return (

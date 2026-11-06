@@ -698,7 +698,15 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 14 }}>
                       {nearbyListings.map(l => (
                         <div key={l.id} className="nearby-listing-row" onClick={() => go(`listing/${l.id}`)}>
-                          <img src={l.image} alt={l.title} className="nearby-listing-img" />
+                          <img
+    src={l.image}
+    alt={l.title}
+    className="nearby-listing-img"
+    loading="lazy"
+    onError={(e) => {
+      (e.target as HTMLImageElement).src = '/hostels/hostel-room-1.jpg';
+    }}
+  />
                           <div className="listing-info">
                             <strong>{l.title}</strong>
                             <div className="listing-meta-tags">
@@ -751,7 +759,15 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 14 }}>
                       {nearbyMesses.map(m => (
                         <div key={m.id} className="nearby-service-row">
-                          <div className="service-category-dot" data-cat="mess" />
+                          <img
+                            src={m.image || '/services/mess-thali-veg.jpg'}
+                            alt={m.name}
+                            style={{ width: 68, height: 68, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }}
+                            loading="lazy"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/services/mess-thali-veg.jpg';
+                            }}
+                          />
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <strong>{m.name}</strong>
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', margin: '4px 0' }}>
@@ -819,7 +835,15 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 14 }}>
                       {nearbyLaundry.map(s => (
                         <div key={s.id} className="nearby-service-row">
-                          <div className="service-category-dot" data-cat="laundry" />
+                          <img
+                            src={s.image || '/services/laundromat.jpg'}
+                            alt={s.name}
+                            style={{ width: 68, height: 68, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }}
+                            loading="lazy"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/services/laundromat.jpg';
+                            }}
+                          />
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <strong>{s.name}</strong>
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', margin: '4px 0' }}>
@@ -883,7 +907,15 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 14 }}>
                       {nearbyMedical.map(s => (
                         <div key={s.id} className="nearby-service-row">
-                          <div className="service-category-dot" data-cat="medical" />
+                          <img
+                            src={s.image || '/services/pharmacy.jpg'}
+                            alt={s.name}
+                            style={{ width: 68, height: 68, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }}
+                            loading="lazy"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/services/pharmacy.jpg';
+                            }}
+                          />
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <strong>{s.name}</strong>
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', margin: '4px 0' }}>
@@ -952,7 +984,15 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
                         const isJioMart = s.name.toLowerCase().includes('jiomart') || s.name.toLowerCase().includes('smart')
                         return (
                           <div key={s.id} className="nearby-service-row">
-                            <div className="service-category-dot" data-cat="grocery" style={{ background: isDMart ? '#059669' : isJioMart ? '#2563eb' : '#10b981' }} />
+                            <img
+                              src={s.image || '/services/supermarket.jpg'}
+                              alt={s.name}
+                              style={{ width: 68, height: 68, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }}
+                              loading="lazy"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/services/supermarket.jpg';
+                              }}
+                            />
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <strong>{s.name}</strong>

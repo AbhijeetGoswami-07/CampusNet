@@ -24,75 +24,119 @@ const CATEGORY_COLORS: Record<string, string> = {
   salon: '#8b5cf6'
 }
 
+export function getDefaultServiceImage(cat: string): string {
+  switch (cat) {
+    case 'mess': return '/services/mess-thali-veg.jpg'
+    case 'library': return '/services/abhyasika-study-hall.jpg'
+    case 'laundry': return '/services/laundromat.jpg'
+    case 'medical': return '/services/pharmacy.jpg'
+    case 'grocery': return '/services/supermarket.jpg'
+    case 'salon': return '/services/salon.jpg'
+    default: return '/services/mess-thali-veg.jpg'
+  }
+}
+
 function ServiceCard({ service }: { service: Service }) {
+  const imgSrc = service.image || getDefaultServiceImage(service.category)
   return (
-    <article className="service-detail-card">
-      <div className="service-card-header">
+    <article className="service-detail-card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div style={{ position: 'relative', width: '100%', height: 160, background: '#f8fafc' }}>
+        <img
+          src={imgSrc}
+          alt={service.name}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          loading="lazy"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = getDefaultServiceImage(service.category)
+          }}
+        />
         <span
           className="service-cat-badge"
           style={{
-            background: (CATEGORY_COLORS[service.category] || '#6366f1') + '20',
-            color: CATEGORY_COLORS[service.category] || '#6366f1'
+            position: 'absolute',
+            top: 10,
+            left: 10,
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(4px)',
+            color: CATEGORY_COLORS[service.category] || '#4f46e5',
+            fontWeight: 700,
+            boxShadow: '0 2px 6px rgba(0,0,0,0.12)'
           }}
         >
           {CATEGORY_LABELS[service.category] || service.category}
         </span>
-        <span className="service-rating">
-          <Star size={13} fill="#d97706" color="#d97706" /> {service.rating}
+        <span
+          className="service-rating"
+          style={{
+            position: 'absolute',
+            top: 10,
+            right: 10,
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(4px)',
+            padding: '3px 8px',
+            borderRadius: 14,
+            fontWeight: 700,
+            boxShadow: '0 2px 6px rgba(0,0,0,0.12)'
+          }}
+        >
+          <Star size={12} fill="#d97706" color="#d97706" /> {service.rating}
         </span>
       </div>
-      <h3>{service.name}</h3>
 
-      {service.collegeName && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '3px 0 8px', flexWrap: 'wrap' }}>
-          <span style={{
-            fontSize: 11,
-            fontWeight: 600,
-            color: '#4338ca',
-            background: '#eef2ff',
-            padding: '2px 8px',
-            borderRadius: 12,
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 4
-          }}>
-            <GraduationCap size={12} /> Near {service.collegeName}
-          </span>
-          {service.source && (
+      <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 7, flex: 1 }}>
+        <h3 style={{ margin: 0 }}>{service.name}</h3>
+
+        {service.collegeName && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '2px 0 4px', flexWrap: 'wrap' }}>
             <span style={{
-              fontSize: 10,
+              fontSize: 11,
               fontWeight: 600,
-              color: '#15803d',
-              background: '#f0fdf4',
-              border: '1px solid #bbf7d0',
-              padding: '1px 6px',
-              borderRadius: 4
+              color: '#4338ca',
+              background: '#eef2ff',
+              padding: '2px 8px',
+              borderRadius: 12,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4
             }}>
-              ✓ {service.source}
+              <GraduationCap size={12} /> Near {service.collegeName}
             </span>
-          )}
-        </div>
-      )}
+            {service.source && (
+              <span style={{
+                fontSize: 10,
+                fontWeight: 600,
+                color: '#15803d',
+                background: '#f0fdf4',
+                border: '1px solid #bbf7d0',
+                padding: '1px 6px',
+                borderRadius: 4
+              }}>
+                ✓ {service.source}
+              </span>
+            )}
+          </div>
+        )}
 
-      <p className="service-address"><MapPin size={13} /> {service.address}</p>
-      <p className="service-timing"><Clock size={13} /> {service.timing}</p>
-      <p className="service-desc">{service.description}</p>
-      <div className="service-footer">
-        <span className="service-price">{service.priceRange}</span>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <a
-            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${service.name}, ${service.address}, Pune`)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="outline-button"
-            style={{ fontSize: 11, padding: '7px 11px' }}
-            title="Open on Google Maps"
-          >
-            🗺️ Maps <ExternalLink size={11} />
-          </a>
-          <a href={`tel:${service.phone}`} className="outline-button service-call">
-            <Phone size={13} /> {service.phone}
-          </a>
+        <p className="service-address" style={{ margin: 0 }}><MapPin size={13} /> {service.address}</p>
+        <p className="service-timing" style={{ margin: 0 }}><Clock size={13} /> {service.timing}</p>
+        <p className="service-desc" style={{ margin: '4px 0 0', flex: 1 }}>{service.description}</p>
+        <div className="service-footer" style={{ marginTop: 8, paddingTop: 10, borderTop: '1px solid var(--line)' }}>
+          <span className="service-price">{service.priceRange}</span>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${service.name}, ${service.address}, Pune`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="outline-button"
+              style={{ fontSize: 11, padding: '7px 11px' }}
+              title="Open on Google Maps"
+            >
+              🗺️ Maps <ExternalLink size={11} />
+            </a>
+            <a href={`tel:${service.phone}`} className="outline-button service-call">
+              <Phone size={13} /> {service.phone}
+            </a>
+          </div>
         </div>
       </div>
     </article>
