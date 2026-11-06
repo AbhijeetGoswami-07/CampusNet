@@ -109,7 +109,7 @@ export const puneListings: PuneListing[] = [
     total: 20,
     roomType: 'Shared room (2 Beds)',
     genderPreference: 'Any',
-    image: '/hostels/real-indian-boys-hostel.jpg',
+    image: '/hostels/boys-pg-room-coep.jpg',
     verified: true,
     food: true,
     laundry: true,
@@ -140,7 +140,7 @@ export const puneListings: PuneListing[] = [
     total: 15,
     roomType: 'Double Sharing',
     genderPreference: 'Women',
-    image: '/hostels/pg-room-girls.jpg',
+    image: '/hostels/girls-pg-room-mit.jpg',
     verified: true,
     food: true,
     laundry: false,
@@ -171,7 +171,7 @@ export const puneListings: PuneListing[] = [
     total: 4,
     roomType: 'Entire Studio 1RK',
     genderPreference: 'Any',
-    image: '/hostels/coliving-premium.jpg',
+    image: '/hostels/viman-nagar-studio-flat.jpg',
     verified: true,
     food: false,
     laundry: true,
@@ -202,7 +202,7 @@ export const puneListings: PuneListing[] = [
     total: 40,
     roomType: 'Triple Sharing',
     genderPreference: 'Men',
-    image: '/hostels/real-hostel-room-study.jpg',
+    image: '/hostels/deccan-boys-hostel-room.jpg',
     verified: true,
     food: true,
     laundry: false,
@@ -233,13 +233,13 @@ export const puneListings: PuneListing[] = [
     total: 30,
     roomType: 'Private room with AC',
     genderPreference: 'Any',
-    image: '/hostels/pg-room-boys.jpg',
+    image: '/hostels/techzone-hinjawadi-pg.jpg',
     verified: true,
     food: true,
     laundry: true,
     wifi: true,
     collegeName: 'Symbiosis Institute of Technology',
-    source: 'Justdial / Sulekha Verified'
+    source: 'IndiaMART Verified'
   },
   {
     id: 'baner-shared-flat',
@@ -264,13 +264,13 @@ export const puneListings: PuneListing[] = [
     total: 8,
     roomType: 'Shared Furnished 2BHK',
     genderPreference: 'Any',
-    image: '/hostels/student-flat-share.jpg',
+    image: '/hostels/baner-residency-2bhk.jpg',
     verified: true,
     food: false,
     laundry: true,
     wifi: true,
     collegeName: 'Savitribai Phule Pune University',
-    source: 'Justdial / Sulekha Verified'
+    source: 'Quikr Verified'
   },
   {
     id: 'symbiosis-lavale-flat',
@@ -295,13 +295,13 @@ export const puneListings: PuneListing[] = [
     total: 6,
     roomType: 'Private Room with Balcony',
     genderPreference: 'Any',
-    image: '/hostels/flat-1.jpg',
+    image: '/hostels/lavale-hills-coliving-room.jpg',
     verified: true,
     food: false,
     laundry: true,
     wifi: true,
     collegeName: 'Symbiosis Institute of Technology',
-    source: 'Sulekha Verified'
+    source: 'Justdial / Sulekha Verified'
   },
   {
     id: 'dhankawadi-pict-pg',
@@ -326,7 +326,7 @@ export const puneListings: PuneListing[] = [
     total: 25,
     roomType: 'Shared room',
     genderPreference: 'Men',
-    image: '/hostels/real-hostel-room-study.jpg',
+    image: '/hostels/pict-scholar-pg-dhankawadi.jpg',
     verified: true,
     food: true,
     laundry: true,
@@ -357,7 +357,7 @@ export const puneListings: PuneListing[] = [
     total: 35,
     roomType: 'Twin Sharing AC',
     genderPreference: 'Any',
-    image: '/hostels/real-pune-sspms-hostel.jpg',
+    image: '/hostels/aundh-premium-hostel-room.jpg',
     verified: true,
     food: true,
     laundry: true,
@@ -394,7 +394,7 @@ export const puneListings: PuneListing[] = [
     laundry: true,
     wifi: true,
     collegeName: 'MIT Academy of Engineering',
-    source: 'Justdial / Sulekha Verified'
+    source: 'Justdial Verified'
   },
   {
     id: 'dnyaneshwar-krupa-hostel',
@@ -425,7 +425,7 @@ export const puneListings: PuneListing[] = [
     laundry: true,
     wifi: true,
     collegeName: 'MIT Academy of Engineering',
-    source: 'Quikr Verified'
+    source: 'Sulekha Verified'
   },
   {
     id: 'mauli-girls-hostel-alandi',
@@ -456,7 +456,7 @@ export const puneListings: PuneListing[] = [
     laundry: true,
     wifi: true,
     collegeName: 'MIT Arts, Commerce and Science College',
-    source: 'Justdial / Sulekha Verified'
+    source: 'Justdial Verified'
   },
   {
     id: 'alandi-greens-flat',
@@ -481,13 +481,13 @@ export const puneListings: PuneListing[] = [
     total: 6,
     roomType: 'Entire Flat 2BHK',
     genderPreference: 'Any',
-    image: '/hostels/student-flat-share.jpg',
+    image: '/hostels/student-flat-hall.jpg',
     verified: true,
     food: false,
     laundry: true,
     wifi: true,
     collegeName: 'MIT Academy of Engineering',
-    source: 'Justdial / Sulekha Verified'
+    source: 'Quikr Verified'
   },
   {
     id: 'charholi-hilltop-pg',
@@ -518,7 +518,7 @@ export const puneListings: PuneListing[] = [
     laundry: true,
     wifi: true,
     collegeName: 'Ajeenkya DY Patil University',
-    source: 'Sulekha Verified'
+    source: 'IndiaMART Verified'
   },
   {
     id: 'adypu-scholars-residency',
@@ -543,13 +543,13 @@ export const puneListings: PuneListing[] = [
     total: 28,
     roomType: 'Twin Sharing AC',
     genderPreference: 'Any',
-    image: '/hostels/coliving-premium.jpg',
+    image: '/hostels/real-pune-karve-hostel.jpg',
     verified: true,
     food: true,
     laundry: true,
     wifi: true,
     collegeName: 'Ajeenkya DY Patil University',
-    source: 'IndiaMART Verified'
+    source: 'Sulekha Verified'
   },
   {
     id: 'dudulgaon-scholars-residency',

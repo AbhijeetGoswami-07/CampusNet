@@ -46,11 +46,13 @@ export const sampleListings: Listing[] = puneListings.map(p => ({
   images: [
     p.image,
     p.category === 'Flat'
-      ? '/hostels/flat-2.jpg'
-      : '/hostels/hostel-room-2.jpg',
+      ? '/hostels/student-flat-hall.jpg'
+      : p.genderPreference === 'Women'
+        ? '/hostels/girls-pg-room-mit.jpg'
+        : '/hostels/boys-pg-room-coep.jpg',
     p.category === 'Flat'
-      ? '/hostels/flat-3.jpg'
-      : '/hostels/hostel-room-3.jpg'
+      ? '/hostels/flat-1.jpg'
+      : '/hostels/real-hostel-common-area.jpg'
   ]
 }))
 
