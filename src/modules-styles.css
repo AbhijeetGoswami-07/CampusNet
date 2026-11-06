@@ -10,11 +10,12 @@
 .page-section,
 .info-page,
 .modules-showcase {
-  max-width: 1680px !important;
+  max-width: 100% !important;
+  width: 100% !important;
   margin-left: auto !important;
   margin-right: auto !important;
-  padding-left: 24px !important;
-  padding-right: 24px !important;
+  padding-left: clamp(24px, 3.5vw, 64px) !important;
+  padding-right: clamp(24px, 3.5vw, 64px) !important;
 }
 
 .page-section {
@@ -34,7 +35,8 @@
   border-bottom: 1px solid var(--line) !important;
   height: 72px !important;
   max-width: 100% !important;
-  padding: 0 max(24px, calc((100% - 1220px) / 2)) !important;
+  width: 100% !important;
+  padding: 0 clamp(24px, 3.5vw, 64px) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
@@ -227,7 +229,7 @@
    -------------------------------------------------------------------------- */
 .search-layout-compare {
   display: grid;
-  grid-template-columns: 280px minmax(0, 1.4fr) minmax(420px, 0.95fr);
+  grid-template-columns: 290px minmax(480px, 1.4fr) minmax(440px, 1.15fr);
   gap: 28px;
   align-items: start;
   margin-top: 20px;
