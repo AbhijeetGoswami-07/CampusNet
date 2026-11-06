@@ -33,7 +33,7 @@ export function HomePage({ go }: { go: (page: string) => void }) {
           </div>
         </div>
         <div className="hero-photo">
-          <img src={sampleListings[0].image} alt="Bright verified student apartment in Pune" />
+          <img src="/hostels/hero-pune-student-living.jpg" alt="Bright verified student apartment in Pune" />
           <span><ShieldCheck size={16} /> 100% provider verified</span>
         </div>
       </section>
