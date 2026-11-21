@@ -23,9 +23,11 @@
     "total": 21,
     "roomType": "Twin Sharing",
     "genderPreference": "Any",
-    "hasRealPhotos": false,
-    "images": [],
-    "image": "",
+    "hasRealPhotos": true,
+    "images": [
+      "/images/listings/ChIJL_rfPbq_wjsRp2P2DaHNHIQ_0.jpg"
+    ],
+    "image": "/images/listings/ChIJL_rfPbq_wjsRp2P2DaHNHIQ_0.jpg",
     "mapsUrl": "https://maps.google.com/?cid=9519709803962065831&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA",
     "phoneNumber": "084484 48421",
     "address": "102, Stepone, Paud Rd, above Dominos Pizza, Swayam Siddha Housing Society, Kothrud, Pune, Maharashtra 411038, India",
@@ -60,9 +62,11 @@
     "total": 21,
     "roomType": "Twin Sharing",
     "genderPreference": "Men",
-    "hasRealPhotos": false,
-    "images": [],
-    "image": "",
+    "hasRealPhotos": true,
+    "images": [
+      "/images/listings/ChIJ_8ZBOwC_wjsRfDQ_2flQ1nk_0.jpg"
+    ],
+    "image": "/images/listings/ChIJ_8ZBOwC_wjsRfDQ_2flQ1nk_0.jpg",
     "mapsUrl": "https://maps.google.com/?cid=8779293557627237500&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA",
     "phoneNumber": "097670 48291",
     "address": "Krishna Prasad, Apt near Bedekar, Ganpati Pawan tailors, Paud Rd, Rambaug Colony, Kothrud, Pune, Maharashtra 411038, India",
@@ -97,9 +101,11 @@
     "total": 12,
     "roomType": "Twin Sharing",
     "genderPreference": "Men",
-    "hasRealPhotos": false,
-    "images": [],
-    "image": "",
+    "hasRealPhotos": true,
+    "images": [
+      "/images/listings/ChIJf_nbxFC_wjsRIs1Ug-Z79Yg_0.jpg"
+    ],
+    "image": "/images/listings/ChIJf_nbxFC_wjsRIs1Ug-Z79Yg_0.jpg",
     "mapsUrl": "https://maps.google.com/?cid=9868930388428377378&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA",
     "phoneNumber": "+91 20 2553 0000",
     "address": "Harshraj, Girija Society, Rambaug Colony, Kothrud, Pune, Maharashtra 411038, India",
@@ -963,7 +969,7 @@
   },
   {
     "id": "ChIJkQpV2IHBwjsRybo_eaUKamY",
-    "title": "Cozmo Living – Co-living in Viman Nagar, Pune",
+    "title": "Cozmo Living \u2013 Co-living in Viman Nagar, Pune",
     "category": "Flat",
     "locality": "Viman Nagar",
     "city": "Pune",
@@ -1666,7 +1672,7 @@
   },
   {
     "id": "ChIJye0X8HC_wjsRwtoB_DJXZdY",
-    "title": "Shivajinagar PG & Hostel – UrBan PG",
+    "title": "Shivajinagar PG & Hostel \u2013 UrBan PG",
     "category": "Hostel",
     "locality": "Shivajinagar",
     "city": "Pune",
@@ -1952,7 +1958,7 @@
     "image": "",
     "mapsUrl": "https://maps.google.com/?cid=1959121535570545855&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA",
     "phoneNumber": "098810 84445",
-    "address": "P.No 51, S 1/1/10 레인 넘버 6 Sahu Colony, Karvenagar, Pune, Maharashtra 411052, India",
+    "address": "P.No 51, S 1/1/10 \ub808\uc778 \ub118\ubc84 6 Sahu Colony, Karvenagar, Pune, Maharashtra 411052, India",
     "verified": true,
     "food": false,
     "laundry": true,
@@ -2998,7 +3004,7 @@
   },
   {
     "id": "ChIJ4USsu1O_wjsRqRLr33EERxU",
-    "title": "VVedant* Mess ( Gharguti Jevan )..वेदांत मेस (घरगुती जेवण )Tiffin Service Provider",
+    "title": "VVedant* Mess ( Gharguti Jevan )..\u0935\u0947\u0926\u093e\u0902\u0924 \u092e\u0947\u0938 (\u0918\u0930\u0917\u0941\u0924\u0940 \u091c\u0947\u0935\u0923 )Tiffin Service Provider",
     "category": "Mess",
     "locality": "Kothrud",
     "city": "Pune",
