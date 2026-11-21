@@ -283,7 +283,8 @@ export const puneServices: Service[] = [
     priceRange: "₹2,700/month",
     description: "Spacious dining facility with unlimited wholesome lunch and dinner for MIT engineering & design students.",
     collegeName: "MIT World Peace University",
-    source: "Justdial Verified"
+    source: "Justdial Verified",
+    image: '/services/punjabi-chole-bhature.jpg'
   },
   {
     id: "sulekha-rutuja-tiffins-mit",
@@ -299,7 +300,8 @@ export const puneServices: Service[] = [
     priceRange: "₹2,500/month",
     description: "Hygienic packed tiffins with options for both North Indian and Maharashtrian diets. Free hostel delivery.",
     collegeName: "MIT World Peace University",
-    source: "Sulekha Verified"
+    source: "Sulekha Verified",
+    image: '/services/sukanta-rajasthani-thali.jpg'
   },
   {
     id: "jd-krushna-bhojnalay-pict",
@@ -315,7 +317,8 @@ export const puneServices: Service[] = [
     priceRange: "₹2,300/month",
     description: "Affordable and filling student meals right behind PICT. Includes unlimited dal, rice, chapatis, and pickle.",
     collegeName: "Pune Institute of Computer Technology",
-    source: "Justdial Verified"
+    source: "Justdial Verified",
+    image: '/services/south-indian-bhojanam.jpg'
   },
   {
     id: "sulekha-saisagar-mess-pict",
@@ -331,7 +334,8 @@ export const puneServices: Service[] = [
     priceRange: "₹2,400/month",
     description: "Clean dining hall popular among computer science and engineering hostellers. Unlimited lunch and dinner coupons.",
     collegeName: "Pune Institute of Computer Technology",
-    source: "Sulekha Verified"
+    source: "Sulekha Verified",
+    image: '/services/sagar-dal-makhani.jpg'
   },
   {
     id: "jd-samarth-mess-mitaoe",
@@ -347,7 +351,8 @@ export const puneServices: Service[] = [
     priceRange: "₹2,200/month",
     description: "Economical, fresh homestyle meals serving MIT AOE engineering students daily. Monthly coupon books available.",
     collegeName: "MIT Academy of Engineering",
-    source: "Justdial Verified"
+    source: "Justdial Verified",
+    image: '/services/wadeshwar-pav-bhaji.jpg'
   },
   {
     id: "quikr-tasty-tiffins-symbiosis",
@@ -363,7 +368,8 @@ export const puneServices: Service[] = [
     priceRange: "₹3,200/month",
     description: "North Indian & Continental hygienic meals prepared especially for Symbiosis law, management and design students.",
     collegeName: "Symbiosis Law School",
-    source: "Quikr / Justdial Verified"
+    source: "Quikr / Justdial Verified",
+    image: '/services/shreyas-pune-thali.jpg'
   },
   {
     id: "jd-student-laundromat-mit",
@@ -413,7 +419,8 @@ export const puneServices: Service[] = [
     priceRange: "₹50/kg",
     description: "Quick turnaround laundry with computerized weight billing and student delivery to COEP hostel gates.",
     collegeName: "COEP Technological University",
-    source: "Sulekha Verified"
+    source: "Sulekha Verified",
+    image: '/services/laundromat.jpg'
   },
   {
     id: "im-campus-cleaners-mitaoe",
@@ -429,7 +436,8 @@ export const puneServices: Service[] = [
     priceRange: "₹35/kg",
     description: "Affordable wash-and-fold service catering to students living in Alandi and Charholi hostels.",
     collegeName: "MIT Academy of Engineering",
-    source: "IndiaMART / Justdial Verified"
+    source: "IndiaMART / Justdial Verified",
+    image: '/services/laundry-care.jpg'
   },
   {
     id: "jd-maharashtra-abhyasika-mit",
@@ -479,7 +487,8 @@ export const puneServices: Service[] = [
     priceRange: "₹800/month",
     description: "Fully air-conditioned 24-hour study hall equipped with high-speed internet, silent study cabins, and charging points.",
     collegeName: "Pune Institute of Computer Technology",
-    source: "Justdial Verified"
+    source: "Justdial Verified",
+    image: '/services/library-1.jpg'
   },
   {
     id: "jd-pradnya-study-hall-mitaoe",
@@ -495,7 +504,8 @@ export const puneServices: Service[] = [
     priceRange: "₹700/month",
     description: "Quiet study environment with individual lights, charging sockets, and reference books for engineering students.",
     collegeName: "MIT Academy of Engineering",
-    source: "Justdial Verified"
+    source: "Justdial Verified",
+    image: '/services/abhyasika-study-hall.jpg'
   },
   {
     id: "jd-apollo-247-coep",
@@ -528,7 +538,8 @@ export const puneServices: Service[] = [
     priceRange: "Standard MRP (15% Student Discount)",
     description: "Round-the-clock student pharmacy stocking essential generic medicines, bandages, fever kits, and health drinks.",
     collegeName: "MIT World Peace University",
-    source: "Justdial Verified"
+    source: "Justdial Verified",
+    image: '/services/medical-chemist-store.jpg'
   },
   {
     id: "jd-sanjeevani-chemist-pict",
@@ -561,7 +572,8 @@ export const puneServices: Service[] = [
     priceRange: "Standard MRP",
     description: "Trusted campus medical store stocking prescribed pharmaceuticals, protein supplements, and student healthcare kits.",
     collegeName: "MIT Academy of Engineering",
-    source: "IndiaMART / Justdial Verified"
+    source: "IndiaMART / Justdial Verified",
+    image: '/services/medical-chemist-store.jpg'
   }
 ];
 

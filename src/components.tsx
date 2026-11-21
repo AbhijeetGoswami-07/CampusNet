@@ -178,22 +178,28 @@ export function SearchBar({
 
   return (
     <form
-      className="component-search"
+      className="proptech-search-bar component-search"
       onSubmit={(event) => {
         event.preventDefault()
         onSearch?.(val)
       }}
     >
-      <MapPin size={18} />
-      <input
-        name="location"
-        value={val}
-        onChange={(e) => setVal(e.target.value)}
-        aria-label="Search by location, college, or office"
-        placeholder="Search by college (COEP, MIT, Symbiosis), locality (Kothrud, Viman Nagar), or room type..."
-      />
-      <button aria-label="Search" type="submit">
-        <Search size={18} /> Search
+      <div className="search-input-field">
+        <MapPin size={20} className="search-pin-icon" />
+        <div className="search-input-text-wrap">
+          <span className="search-input-label">CAMPUS OR LOCALITY</span>
+          <input
+            name="location"
+            value={val}
+            onChange={(e) => setVal(e.target.value)}
+            aria-label="Search by college or locality in Pune"
+            placeholder="COEP, MIT-WPU, Symbiosis, Kothrud, Viman Nagar..."
+          />
+        </div>
+      </div>
+      <button aria-label="Search" type="submit" className="proptech-search-btn">
+        <Search size={18} />
+        <span>Search</span>
       </button>
     </form>
   )
@@ -202,6 +208,14 @@ export function VerificationBadge() { return <span className="verification-badge
 export function VacancyStatus({ available, total }: { available: number; total: number }) { return <span className={available ? 'vacancy-status' : 'vacancy-status sold'}><span /> {available ? `${available} spot${available > 1 ? 's' : ''} available` : 'Currently full'} <small>of {total}</small></span> }
 export function VacancyFreshness({ lastVerifiedAt }: { lastVerifiedAt: string | null }) { if (!lastVerifiedAt) return <span className="freshness-status outdated"><span /> Outdated <small>No confirmation yet</small></span>; const days = Math.floor((Date.now() - new Date(lastVerifiedAt).getTime()) / 86400000); const status = days <= 3 ? 'recent' : days <= 14 ? 'needs' : 'outdated'; const label = status === 'recent' ? 'Verified recently' : status === 'needs' ? 'Needs confirmation' : 'Outdated'; return <span className={`freshness-status ${status}`}><span /> {label} <small>Last confirmed {new Date(lastVerifiedAt).toLocaleDateString()}</small></span> }
 export function RatingStars({ rating = 4.8 }: { rating?: number }) { return <span className="rating-stars" aria-label={`${rating} out of 5 stars`}>{[1, 2, 3, 4, 5].map((star) => <Star key={star} size={14} fill={star <= Math.round(rating) ? 'currentColor' : 'none'} />)} <b>{rating}</b></span> }
+function getGenderTag(pref?: string): string {
+  if (!pref) return 'Co-ed'
+  const lower = pref.toLowerCase()
+  if (lower.includes('female') || lower.includes('women') || lower.includes('girl')) return 'Girls'
+  if (lower.includes('male') || lower.includes('men') || lower.includes('boy')) return 'Boys'
+  return 'Co-ed'
+}
+
 export function ListingCard({
   listing,
   onOpen,
@@ -244,17 +258,20 @@ export function ListingCard({
   const hasReal = Boolean(listing.hasRealPhotos && listing.images && listing.images.length > 0 && !imgFailed)
 
   return (
-    <article className="component-listing-card horizontal-card">
+    <article className="component-listing-card horizontal-card group">
       {hasReal ? (
         <div className="card-image-wrap" onClick={onOpen}>
           <img
             src={listing.images?.[0] || listing.image}
             alt={`${listing.title} real photo`}
             loading="lazy"
+            className="listing-photo-img"
             onError={() => setImgFailed(true)}
           />
           <span className="card-category-badge">{listing.category}</span>
-          <span className="real-photo-badge">📸 Real Photo</span>
+          <span className="real-photo-badge">
+            <ShieldCheck size={11} /> Real Photos
+          </span>
           <button
             type="button"
             className={`card-wishlist-overlay ${saved ? 'saved' : ''}`}
@@ -272,19 +289,19 @@ export function ListingCard({
         <div className="card-image-wrap card-fallback-wrap" onClick={onOpen}>
           <div className="card-fallback-canvas architectural-card">
             <div className="fallback-category-icon">
-              <Building2 size={30} color="#64748b" />
+              <Building2 size={32} color="#0F2942" />
             </div>
             <span className="fallback-locality">{listing.locality}, Pune</span>
-            <span className="fallback-verified-pill">Google Maps Place</span>
+            <span className="fallback-category-sub">{listing.category}</span>
             <a
               href={gmapUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="fallback-gmap-btn"
               onClick={(e) => e.stopPropagation()}
-              title="Check photos and location on Google Maps"
+              title="View photos and location on Google Maps"
             >
-              <ExternalLink size={12} /> Check Photos on Maps
+              <ExternalLink size={12} /> View on Google Maps
             </a>
           </div>
           <span className="card-category-badge">{listing.category}</span>
@@ -304,23 +321,24 @@ export function ListingCard({
       )}
 
       <div className="card-content">
+        {/* Tier 1: Top Row (Clamped Title + Unified Verified Real Photos Shield Badge + Wishlist) */}
         <div>
           <div className="card-title-row">
-            <h3
-              onClick={onOpen}
-              style={{
-                cursor: 'pointer',
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
-                lineHeight: 1.35,
-                minHeight: '2.7em'
-              }}
-              title={listing.title}
-            >
-              {listing.title}
-            </h3>
+            <div className="card-title-wrap">
+              <h3 onClick={onOpen} className="card-title-text" title={listing.title}>
+                {listing.title}
+              </h3>
+              {hasReal ? (
+                <span className="verified-real-shield-badge">
+                  <ShieldCheck size={13} /> Verified Real Photos
+                </span>
+              ) : (
+                <span className="verified-badge-subtle">
+                  <BadgeCheck size={13} /> Verified Place
+                </span>
+              )}
+            </div>
+
             <button
               type="button"
               className={`card-wishlist-icon-btn ${saved ? 'saved' : ''}`}
@@ -328,10 +346,11 @@ export function ListingCard({
               aria-label={saved ? 'Remove from wishlist' : 'Save to wishlist'}
               title={saved ? 'In Wishlist' : 'Add to Wishlist'}
             >
-              <Heart size={17} fill={saved ? '#ef4444' : 'none'} color={saved ? '#ef4444' : '#64748b'} />
+              <Heart size={18} fill={saved ? '#ef4444' : 'none'} color={saved ? '#ef4444' : '#94a3b8'} />
             </button>
           </div>
 
+          {/* Tier 2: Middle Row (Locality + Near College Chip + Inline Dot-Separated Specs) */}
           <div className="card-location-row">
             <span className="card-loc-text">
               <MapPin size={13} /> {listing.locality}, {listing.city}
@@ -352,70 +371,70 @@ export function ListingCard({
               </span>
             )}
           </div>
+
+          <div className="card-specs-line">
+            <span className="spec-item spec-gender">{getGenderTag(listing.genderPreference)}</span>
+            <span className="spec-dot">•</span>
+            <span className="spec-item">{listing.roomType}</span>
+            {listing.wifi && (
+              <>
+                <span className="spec-dot">•</span>
+                <span className="spec-item"><Wifi size={12} /> Wi-Fi</span>
+              </>
+            )}
+            {listing.food && (
+              <>
+                <span className="spec-dot">•</span>
+                <span className="spec-item">🍽️ Meals</span>
+              </>
+            )}
+            {listing.laundry && (
+              <>
+                <span className="spec-dot">•</span>
+                <span className="spec-item">🧺 Laundry</span>
+              </>
+            )}
+            {listing.available > 0 && (
+              <>
+                <span className="spec-dot">•</span>
+                <span className="spec-item spec-vacancy">{listing.available} spots open</span>
+              </>
+            )}
+          </div>
         </div>
 
-        <div className="card-meta-row">
-          <span className="verification-badge">
-            <BadgeCheck size={14} /> {listing.source ? listing.source.replace(/^✓\s*/, '') : 'Verified'}
-          </span>
-          <VacancyStatus available={listing.available} total={listing.total} />
-        </div>
-
-        <div className="card-services-row">
-          <span className="card-service-pill">{listing.roomType}</span>
-          {listing.wifi && <span className="card-service-pill"><Wifi size={12} /> Wi-Fi</span>}
-          {listing.food && <span className="card-service-pill">🍽️ Food</span>}
-          {listing.laundry && <span className="card-service-pill">🧺 Laundry</span>}
-          {listing.genderPreference && (
-            <span className="card-gender-pill">
-              {listing.genderPreference.toLowerCase() === 'any' || listing.genderPreference.toLowerCase().includes('co-ed')
-                ? 'Co-ed / Any'
-                : listing.genderPreference.toLowerCase().includes('female') || listing.genderPreference.toLowerCase().includes('women')
-                ? 'Women Only'
-                : listing.genderPreference.toLowerCase().includes('male') || listing.genderPreference.toLowerCase().includes('men')
-                ? 'Men Only'
-                : `${listing.genderPreference} Only`}
-            </span>
-          )}
-        </div>
-
+        {/* Tier 3: Bottom Row (Bold Price with Muted Deposit on Left, View Details + Ghost Compare on Right) */}
         <div className="card-bottom-bar">
           <div className="card-price-block">
             <div className="card-rent">
               <b>₹{listing.price.toLocaleString('en-IN')}</b>
-              <small>/ month</small>
+              <small>/mo</small>
             </div>
             {listing.securityDeposit ? (
               <div className="card-deposit-sub">
                 Deposit: ₹{listing.securityDeposit.toLocaleString('en-IN')}
               </div>
-            ) : null}
+            ) : (
+              <div className="card-deposit-sub">
+                Zero brokerage
+              </div>
+            )}
           </div>
 
           <div className="card-actions-group">
             <button
               type="button"
-              className={`compare-control ${isSelected ? 'compare-control-checked' : ''}`}
+              className={`compare-control-ghost ${isSelected ? 'compare-control-checked' : ''}`}
               onClick={handleCompareClick}
               aria-pressed={isSelected}
               title={isSelected ? 'Remove from comparison' : 'Compare up to 3 properties'}
             >
               {isSelected ? <CheckSquare size={14} className="compare-icon-checked" /> : <Square size={14} />}
-              <span>{isSelected ? 'Added to Compare' : 'Compare'}</span>
+              <span>{isSelected ? 'Added' : 'Compare'}</span>
             </button>
 
-            <button
-              type="button"
-              className={`wishlist-control-btn ${saved ? 'saved' : ''}`}
-              onClick={onSave}
-              title={saved ? 'Remove from Wishlist' : 'Add to Wishlist'}
-            >
-              <Heart size={14} fill={saved ? '#ef4444' : 'none'} color={saved ? '#ef4444' : 'currentColor'} />
-              <span>{saved ? 'Wishlisted' : 'Wishlist'}</span>
-            </button>
-
-            <button type="button" className="view-detail-btn" onClick={onOpen}>
-              View details <ChevronRight size={14} />
+            <button type="button" className="view-detail-primary-btn" onClick={onOpen}>
+              View Details <ArrowRight size={14} />
             </button>
           </div>
         </div>
@@ -696,7 +715,55 @@ export function FilterSidebar({
     </aside>
   )
 }
-export function CategorySelector({ onSelect }: { onSelect?: (category: string) => void }) { return <div className="category-selector">{['All homes', 'Flats', 'Hostels', 'PGs', 'Messes', 'Laundry'].map((item) => <button key={item} onClick={() => onSelect?.(item)}>{item}</button>)}</div> }
+export function CategorySelector({
+  onSelect,
+  active = 'All homes',
+  realPhotosOnly,
+  onToggleRealPhotos,
+  realCount
+}: {
+  onSelect?: (category: string) => void;
+  active?: string;
+  realPhotosOnly?: boolean;
+  onToggleRealPhotos?: (val: boolean) => void;
+  realCount?: number;
+}) {
+  const categories = ['All homes', 'PGs', 'Hostels', 'Flats', 'Messes', 'Laundry']
+  return (
+    <div className="filter-bar-container category-selector">
+      <div className="category-selector-pills">
+        {categories.map((item) => (
+          <button
+            key={item}
+            type="button"
+            className={`category-pill-btn ${active === item ? 'active' : ''}`}
+            onClick={() => onSelect?.(item)}
+          >
+            {item}
+          </button>
+        ))}
+      </div>
+
+      {onToggleRealPhotos !== undefined && (
+        <button
+          type="button"
+          className={`real-photos-tactile-toggle ${realPhotosOnly ? 'active' : ''}`}
+          onClick={() => onToggleRealPhotos(!realPhotosOnly)}
+          title="Filter verified accommodations with real photos"
+          aria-pressed={realPhotosOnly}
+        >
+          <div className="toggle-switch-track">
+            <div className="toggle-switch-thumb" />
+          </div>
+          <span className="toggle-label">
+            📸 Real Photos Only
+            {realCount !== undefined ? ` (${realCount})` : ''}
+          </span>
+        </button>
+      )}
+    </div>
+  )
+}
 const money = (value: number | null | undefined) => value === null || value === undefined ? 'Not provided' : `₹${value.toLocaleString('en-IN')}`
 const totalMonthlyCost = (listing: Listing) => [listing.price, listing.foodCost, listing.electricityCost, listing.wifiCost, listing.laundryCost, listing.maintenanceCost, listing.travelCost].reduce((sum: number, value: number | null) => sum + (value ?? 0), 0)
 const hasMissingCosts = (listing: Listing) => [listing.foodCost, listing.electricityCost, listing.wifiCost, listing.laundryCost, listing.maintenanceCost, listing.travelCost].some((value) => value === null)

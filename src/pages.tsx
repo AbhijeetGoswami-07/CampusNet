@@ -132,55 +132,19 @@ export function HomePage({ go }: { go: (page: string) => void }) {
           </div>
           <button className="text-action" onClick={() => go('search')}>View all homes <ArrowRight size={16} /></button>
         </div>
-        <CategorySelector onSelect={(cat) => go(cat === 'All homes' ? 'search' : `search?category=${encodeURIComponent(cat.toLowerCase().replace(/s$/, ''))}`)} />
+        <CategorySelector
+          onSelect={(cat) => go(cat === 'All homes' ? 'search' : `search?category=${encodeURIComponent(cat.toLowerCase().replace(/s$/, ''))}`)}
+          realPhotosOnly={filterRealOnly}
+          onToggleRealPhotos={setFilterRealOnly}
+          realCount={realCount}
+        />
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, margin: '20px 0 24px' }}>
-          <div style={{ display: 'inline-flex', background: '#f1f5f9', padding: '4px', borderRadius: '24px', border: '1px solid #e2e8f0' }}>
-            <button
-              type="button"
-              style={{
-                padding: '7px 18px',
-                borderRadius: '20px',
-                border: 'none',
-                background: filterRealOnly ? '#ffffff' : 'transparent',
-                color: filterRealOnly ? '#0f172a' : '#64748b',
-                fontWeight: filterRealOnly ? 700 : 500,
-                fontSize: 13,
-                cursor: 'pointer',
-                boxShadow: filterRealOnly ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                transition: 'all 0.2s ease'
-              }}
-              onClick={() => setFilterRealOnly(true)}
-            >
-              📸 With Real Photos ({realCount})
-            </button>
-            <button
-              type="button"
-              style={{
-                padding: '7px 18px',
-                borderRadius: '20px',
-                border: 'none',
-                background: !filterRealOnly ? '#ffffff' : 'transparent',
-                color: !filterRealOnly ? '#0f172a' : '#64748b',
-                fontWeight: !filterRealOnly ? 700 : 500,
-                fontSize: 13,
-                cursor: 'pointer',
-                boxShadow: !filterRealOnly ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                transition: 'all 0.2s ease'
-              }}
-              onClick={() => setFilterRealOnly(false)}
-            >
-              🏘️ All Listings ({sampleListings.length})
-            </button>
-          </div>
-          <span style={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>
-            Showing <b>{homeDisplayListings.length}</b> of <b>{activePool.length}</b> verified places
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, margin: '8px 0 20px' }}>
+          <span style={{ fontSize: '13px', color: '#64748B', fontWeight: 500 }}>
+            Showing <b>{homeDisplayListings.length}</b> of <b>{activePool.length}</b> verified places in Pune
+          </span>
+          <span style={{ fontSize: '12px', color: '#059669', background: '#ECFDF5', border: '1px solid #A7F3D0', padding: '3px 10px', borderRadius: '12px', fontWeight: 600 }}>
+            🛡️ 100% Address & Photos Verified
           </span>
         </div>
 
@@ -290,6 +254,9 @@ export function SearchPage({ go }: { go: (page: string) => void }) {
                 )
           )
         }
+        realPhotosOnly={filterRealOnly}
+        onToggleRealPhotos={setFilterRealOnly}
+        realCount={realCount}
       />
 
       <div className="search-layout">

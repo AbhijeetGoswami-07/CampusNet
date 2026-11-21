@@ -72,19 +72,27 @@ export function getDefaultServiceImage(cat: string, seed: string = ''): string {
 }
 
 function ServiceCard({ service }: { service: Service }) {
+  const [imgError, setImgError] = useState(false)
   const imgSrc = service.image || getDefaultServiceImage(service.category, service.id)
   return (
     <article className="service-detail-card" style={{ padding: 0, overflow: 'hidden' }}>
-      <div style={{ position: 'relative', width: '100%', height: 160, background: '#f8fafc' }}>
-        <img
-          src={imgSrc}
-          alt={service.name}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-          loading="lazy"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = getDefaultServiceImage(service.category, service.id)
-          }}
-        />
+      <div style={{ position: 'relative', width: '100%', height: 160, background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {!imgError ? (
+          <img
+            src={imgSrc}
+            alt={service.name}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            loading="lazy"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <div style={{ textAlign: 'center', padding: '16px', color: '#64748b' }}>
+            <span style={{ fontSize: 28, display: 'block', marginBottom: 4 }}>
+              {service.category === 'mess' ? '🍽️' : service.category === 'laundry' ? '👕' : service.category === 'library' ? '📚' : service.category === 'medical' ? '🏥' : '🛒'}
+            </span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: '#475569' }}>{service.locality || 'Pune'}</span>
+          </div>
+        )}
         <span
           className="service-cat-badge"
           style={{
