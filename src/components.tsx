@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from 'react'
-import { ArrowRight, BadgeCheck, CheckCircle2, CheckSquare, ChevronRight, ExternalLink, Heart, LogOut, MapPin, Menu, Plus, Scale, Search, ShieldCheck, Square, Star, User, Wifi, X } from 'lucide-react'
+import { ArrowRight, BadgeCheck, Building2, CheckCircle2, CheckSquare, ChevronRight, ExternalLink, Heart, LogOut, MapPin, Menu, Plus, Scale, Search, ShieldCheck, Square, Star, User, Wifi, X } from 'lucide-react'
 import { isListingCompared, toggleComparedListing, getComparedListings, clearComparedListings } from './data'
 import { MapContainer, Marker, Popup, TileLayer, Tooltip } from 'react-leaflet'
 import type { LatLngExpression } from 'leaflet'
@@ -270,21 +270,21 @@ export function ListingCard({
         </div>
       ) : (
         <div className="card-image-wrap card-fallback-wrap" onClick={onOpen}>
-          <div className="card-fallback-canvas">
+          <div className="card-fallback-canvas architectural-card">
             <div className="fallback-category-icon">
-              {listing.category === 'Hostel' ? '🏢' : listing.category === 'Flat' ? '🏠' : listing.category === 'Mess' ? '🍽️' : listing.category === 'Laundry' ? '🧺' : '🛏️'}
+              <Building2 size={30} color="#64748b" />
             </div>
             <span className="fallback-locality">{listing.locality}, Pune</span>
-            <span className="fallback-verified-pill">Google Maps Verified</span>
+            <span className="fallback-verified-pill">Google Maps Place</span>
             <a
               href={gmapUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="fallback-gmap-btn"
               onClick={(e) => e.stopPropagation()}
-              title="View photos and location directly on Google Maps"
+              title="Check photos and location on Google Maps"
             >
-              <ExternalLink size={12} /> View Photos on Google Maps
+              <ExternalLink size={12} /> Check Photos on Maps
             </a>
           </div>
           <span className="card-category-badge">{listing.category}</span>
@@ -306,7 +306,19 @@ export function ListingCard({
       <div className="card-content">
         <div>
           <div className="card-title-row">
-            <h3 onClick={onOpen} style={{ cursor: 'pointer' }} title={listing.title}>
+            <h3
+              onClick={onOpen}
+              style={{
+                cursor: 'pointer',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                lineHeight: 1.35,
+                minHeight: '2.7em'
+              }}
+              title={listing.title}
+            >
               {listing.title}
             </h3>
             <button
@@ -343,12 +355,9 @@ export function ListingCard({
         </div>
 
         <div className="card-meta-row">
-          <VerificationBadge />
-          {listing.source && (
-            <span className="card-source-chip">
-              ✓ {listing.source}
-            </span>
-          )}
+          <span className="verification-badge">
+            <BadgeCheck size={14} /> {listing.source ? listing.source.replace(/^✓\s*/, '') : 'Verified'}
+          </span>
           <VacancyStatus available={listing.available} total={listing.total} />
         </div>
 
@@ -359,7 +368,13 @@ export function ListingCard({
           {listing.laundry && <span className="card-service-pill">🧺 Laundry</span>}
           {listing.genderPreference && (
             <span className="card-gender-pill">
-              {listing.genderPreference} Only
+              {listing.genderPreference.toLowerCase() === 'any' || listing.genderPreference.toLowerCase().includes('co-ed')
+                ? 'Co-ed / Any'
+                : listing.genderPreference.toLowerCase().includes('female') || listing.genderPreference.toLowerCase().includes('women')
+                ? 'Women Only'
+                : listing.genderPreference.toLowerCase().includes('male') || listing.genderPreference.toLowerCase().includes('men')
+                ? 'Men Only'
+                : `${listing.genderPreference} Only`}
             </span>
           )}
         </div>

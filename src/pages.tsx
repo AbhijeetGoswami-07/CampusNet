@@ -15,7 +15,28 @@ export { FlatmateMatchingPage, ExpenseEstimatorPage, CollegesNearbyPage, Enhance
 
 export function HomePage({ go }: { go: (page: string) => void }) {
   const [showAllHomes, setShowAllHomes] = useState(false)
-  const homeDisplayListings = showAllHomes ? sampleListings : sampleListings.slice(0, 9)
+  const [filterRealOnly, setFilterRealOnly] = useState(true)
+
+  // Sort listings: Real photos first
+  const sortedListings = useMemo(() => {
+    return [...sampleListings].sort((a, b) => {
+      const aReal = a.hasRealPhotos && a.images && a.images.length > 0
+      const bReal = b.hasRealPhotos && b.images && b.images.length > 0
+      if (aReal && !bReal) return -1
+      if (!aReal && bReal) return 1
+      return 0
+    })
+  }, [])
+
+  const realCount = useMemo(() => {
+    return sampleListings.filter(l => l.hasRealPhotos && l.images && l.images.length > 0).length
+  }, [])
+
+  const activePool = filterRealOnly
+    ? sortedListings.filter(l => l.hasRealPhotos && l.images && l.images.length > 0)
+    : sortedListings
+
+  const homeDisplayListings = showAllHomes ? activePool : activePool.slice(0, 9)
 
   return (
     <>
@@ -112,6 +133,57 @@ export function HomePage({ go }: { go: (page: string) => void }) {
           <button className="text-action" onClick={() => go('search')}>View all homes <ArrowRight size={16} /></button>
         </div>
         <CategorySelector onSelect={(cat) => go(cat === 'All homes' ? 'search' : `search?category=${encodeURIComponent(cat.toLowerCase().replace(/s$/, ''))}`)} />
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, margin: '20px 0 24px' }}>
+          <div style={{ display: 'inline-flex', background: '#f1f5f9', padding: '4px', borderRadius: '24px', border: '1px solid #e2e8f0' }}>
+            <button
+              type="button"
+              style={{
+                padding: '7px 18px',
+                borderRadius: '20px',
+                border: 'none',
+                background: filterRealOnly ? '#ffffff' : 'transparent',
+                color: filterRealOnly ? '#0f172a' : '#64748b',
+                fontWeight: filterRealOnly ? 700 : 500,
+                fontSize: 13,
+                cursor: 'pointer',
+                boxShadow: filterRealOnly ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                transition: 'all 0.2s ease'
+              }}
+              onClick={() => setFilterRealOnly(true)}
+            >
+              📸 With Real Photos ({realCount})
+            </button>
+            <button
+              type="button"
+              style={{
+                padding: '7px 18px',
+                borderRadius: '20px',
+                border: 'none',
+                background: !filterRealOnly ? '#ffffff' : 'transparent',
+                color: !filterRealOnly ? '#0f172a' : '#64748b',
+                fontWeight: !filterRealOnly ? 700 : 500,
+                fontSize: 13,
+                cursor: 'pointer',
+                boxShadow: !filterRealOnly ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                transition: 'all 0.2s ease'
+              }}
+              onClick={() => setFilterRealOnly(false)}
+            >
+              🏘️ All Listings ({sampleListings.length})
+            </button>
+          </div>
+          <span style={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>
+            Showing <b>{homeDisplayListings.length}</b> of <b>{activePool.length}</b> verified places
+          </span>
+        </div>
+
         <div className="listing-grid">
           {homeDisplayListings.map((listing) => (
             <ListingCard key={listing.id} listing={listing} onOpen={() => go(`listing/${listing.id}`)} />
@@ -170,7 +242,144 @@ export function HomePage({ go }: { go: (page: string) => void }) {
   )
 }
 
-export function SearchPage({ go }: { go: (page: string) => void }) { const [filtered, setFiltered] = useState(sampleListings); const [saved, setSaved] = useState<string[]>([]); return <section className="page-section"><div className="page-heading"><div><p className="eyebrow">SEARCH RESULTS</p><h1>Homes near your next destination</h1><p>12 verified places match your search.</p></div><button className="outline-button" onClick={() => go("compare")}>Compare selected ({saved.length})</button></div><SearchBar /><CategorySelector onSelect={(category) => setFiltered(category === 'All homes' ? sampleListings : sampleListings.filter((item) => item.category.toLowerCase() === category.slice(0, -1).toLowerCase()))} /><div className="search-layout"><FilterSidebar onApply={(f) => setFiltered(sampleListings.filter((item) => { if (f.category && f.category !== "all" && !item.category.toLowerCase().includes(f.category.toLowerCase())) return false; if (f.maxRent && item.price > f.maxRent) return false; if (f.roomType && item.roomType.toLowerCase() !== f.roomType.toLowerCase()) return false; if (f.gender && f.gender !== "Any" && item.genderPreference.toLowerCase() !== f.gender.toLowerCase()) return false; if (f.food && !item.food) return false; if (f.wifi && !item.wifi) return false; if (f.laundry && !item.laundry) return false; return true; }))} /><div className="result-stack"><div className="result-toolbar"><b>{filtered.length + 9} homes found</b><select aria-label="Sort results"><option>Recommended</option><option>Price: low to high</option><option>Most available</option></select></div>{filtered.map((listing) => <ListingCard key={listing.id} listing={listing} onOpen={() => go(`listing/${listing.id}`)} onSave={() => setSaved((current) => current.includes(listing.id) ? current.filter((id) => id !== listing.id) : [...current, listing.id])} saved={saved.includes(listing.id)} />)}</div></div></section> }
+export function SearchPage({ go }: { go: (page: string) => void }) {
+  const [filterRealOnly, setFilterRealOnly] = useState(true)
+  const [filtered, setFiltered] = useState(sampleListings)
+  const [saved, setSaved] = useState<string[]>([])
+
+  const sortedListings = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      const aReal = a.hasRealPhotos && a.images && a.images.length > 0
+      const bReal = b.hasRealPhotos && b.images && b.images.length > 0
+      if (aReal && !bReal) return -1
+      if (!aReal && bReal) return 1
+      return 0
+    })
+  }, [filtered])
+
+  const displayed = filterRealOnly
+    ? sortedListings.filter((l) => l.hasRealPhotos && l.images && l.images.length > 0)
+    : sortedListings
+
+  const realCount = useMemo(() => {
+    return sampleListings.filter((l) => l.hasRealPhotos && l.images && l.images.length > 0).length
+  }, [])
+
+  return (
+    <section className="page-section">
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">SEARCH RESULTS</p>
+          <h1>Homes near your next destination</h1>
+          <p>{displayed.length} verified places available in Pune.</p>
+        </div>
+        <button className="outline-button" onClick={() => go('compare')}>
+          Compare selected ({saved.length})
+        </button>
+      </div>
+
+      <SearchBar />
+
+      <CategorySelector
+        onSelect={(category) =>
+          setFiltered(
+            category === 'All homes'
+              ? sampleListings
+              : sampleListings.filter((item) =>
+                  item.category.toLowerCase() === category.slice(0, -1).toLowerCase()
+                )
+          )
+        }
+      />
+
+      <div className="search-layout">
+        <FilterSidebar
+          onApply={(f) =>
+            setFiltered(
+              sampleListings.filter((item) => {
+                if (f.category && f.category !== 'all' && !item.category.toLowerCase().includes(f.category.toLowerCase()))
+                  return false
+                if (f.maxRent && item.price > f.maxRent) return false
+                if (f.roomType && item.roomType.toLowerCase() !== f.roomType.toLowerCase()) return false
+                if (f.gender && f.gender !== 'Any' && item.genderPreference.toLowerCase() !== f.gender.toLowerCase())
+                  return false
+                if (f.food && !item.food) return false
+                if (f.wifi && !item.wifi) return false
+                if (f.laundry && !item.laundry) return false
+                return true
+              })
+            )
+          }
+        />
+
+        <div className="result-stack">
+          <div className="result-toolbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+            <div style={{ display: 'inline-flex', background: '#f1f5f9', padding: '3px', borderRadius: '20px', border: '1px solid #e2e8f0' }}>
+              <button
+                type="button"
+                style={{
+                  padding: '5px 14px',
+                  borderRadius: '16px',
+                  border: 'none',
+                  background: filterRealOnly ? '#ffffff' : 'transparent',
+                  color: filterRealOnly ? '#0f172a' : '#64748b',
+                  fontWeight: filterRealOnly ? 700 : 500,
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  boxShadow: filterRealOnly ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5
+                }}
+                onClick={() => setFilterRealOnly(true)}
+              >
+                📸 Real Photos ({realCount})
+              </button>
+              <button
+                type="button"
+                style={{
+                  padding: '5px 14px',
+                  borderRadius: '16px',
+                  border: 'none',
+                  background: !filterRealOnly ? '#ffffff' : 'transparent',
+                  color: !filterRealOnly ? '#0f172a' : '#64748b',
+                  fontWeight: !filterRealOnly ? 700 : 500,
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  boxShadow: !filterRealOnly ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5
+                }}
+                onClick={() => setFilterRealOnly(false)}
+              >
+                All Places ({filtered.length})
+              </button>
+            </div>
+
+            <b>{displayed.length} homes shown</b>
+          </div>
+
+          {displayed.map((listing) => (
+            <ListingCard
+              key={listing.id}
+              listing={listing}
+              onOpen={() => go(`listing/${listing.id}`)}
+              onSave={() =>
+                setSaved((current) =>
+                  current.includes(listing.id)
+                    ? current.filter((id) => id !== listing.id)
+                    : [...current, listing.id]
+                )
+              }
+              saved={saved.includes(listing.id)}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
 
 export function ListingPage({ id, go }: { id: string; go: (page: string) => void }) {
   const listing = sampleListings.find((item) => item.id === id) ?? sampleListings[0]
