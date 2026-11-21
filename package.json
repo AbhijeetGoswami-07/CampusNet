@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "fetch:listings": "node scripts/fetch_real_listings.js",
+    "fetch:listings:py": "python scripts/fetch_real_listings.py"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.56.0",

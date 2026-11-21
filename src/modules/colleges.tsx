@@ -94,7 +94,7 @@ function CollegeCard({
           alt={college.name}
           loading="lazy"
           onError={(e) => {
-            (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1200&q=80'
+            (e.currentTarget as HTMLImageElement).src = '/colleges/coep.jpg'
           }}
         />
         <span className="college-type-badge">{college.type.split('&')[0].trim()}</span>
@@ -698,15 +698,21 @@ export function CollegesNearbyPage({ go }: { go: (page: string) => void }) {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 14 }}>
                       {nearbyListings.map(l => (
                         <div key={l.id} className="nearby-listing-row" onClick={() => go(`listing/${l.id}`)}>
-                          <img
-    src={l.image}
-    alt={l.title}
-    className="nearby-listing-img"
-    loading="lazy"
-    onError={(e) => {
-      (e.target as HTMLImageElement).src = '/hostels/hostel-room-1.jpg';
-    }}
-  />
+                          {l.hasRealPhotos && l.image ? (
+                            <img
+                              src={l.image}
+                              alt={l.title}
+                              className="nearby-listing-img"
+                              loading="lazy"
+                              onError={(e) => {
+                                (e.target as HTMLElement).style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <div className="nearby-listing-fallback-icon">
+                              {l.category === 'Hostel' ? '🏢' : l.category === 'Flat' ? '🏠' : l.category === 'Mess' ? '🍽️' : l.category === 'Laundry' ? '🧺' : '🛏️'}
+                            </div>
+                          )}
                           <div className="listing-info">
                             <strong>{l.title}</strong>
                             <div className="listing-meta-tags">

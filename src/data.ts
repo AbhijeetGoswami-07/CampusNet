@@ -7,7 +7,43 @@ export type NaturalSearchFilters = Pick<ListingFilters, 'category' | 'collegeNam
 export type ListingInput = { title: string; category: 'flat' | 'hostel' | 'pg' | 'mess' | 'laundry'; description: string; address: string; locality: string; city: string; college_name: string; monthly_rent: number; security_deposit: number; electricity_cost?: number | null; food_cost?: number | null; wifi_cost?: number | null; laundry_cost?: number | null; maintenance_cost?: number | null; travel_cost_estimate?: number | null; room_type: string; gender_preference: string; total_capacity: number; available_capacity: number; food_available: boolean; laundry_available: boolean; wifi_available: boolean }
 
 export function requireSupabase() { if (!supabase) throw new Error('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.'); return supabase }
-function mapListing(row: any): Listing { const image = row.listing_images?.find((item: any) => item.is_primary)?.image_url ?? row.listing_images?.[0]?.image_url ?? 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=900&q=85'; const summary = Array.isArray(row.listing_review_summary) ? row.listing_review_summary[0] : row.listing_review_summary; return { id: row.id, title: row.title, category: row.category, locality: row.locality ?? '', city: row.city ?? '', latitude: row.latitude === null || row.latitude === undefined ? null : Number(row.latitude), longitude: row.longitude === null || row.longitude === undefined ? null : Number(row.longitude), price: Number(row.monthly_rent ?? 0), foodCost: row.food_cost === null || row.food_cost === undefined ? null : Number(row.food_cost), electricityCost: row.electricity_cost === null || row.electricity_cost === undefined ? null : Number(row.electricity_cost), wifiCost: row.wifi_cost === null || row.wifi_cost === undefined ? null : Number(row.wifi_cost), laundryCost: row.laundry_cost === null || row.laundry_cost === undefined ? null : Number(row.laundry_cost), maintenanceCost: row.maintenance_cost === null || row.maintenance_cost === undefined ? null : Number(row.maintenance_cost), travelCost: row.travel_cost_estimate === null || row.travel_cost_estimate === undefined ? null : Number(row.travel_cost_estimate), securityDeposit: row.security_deposit === null || row.security_deposit === undefined ? null : Number(row.security_deposit), distance: row.distance_km === null || row.distance_km === undefined ? null : Number(row.distance_km), rating: summary?.average_rating === null || summary?.average_rating === undefined ? null : Number(summary.average_rating), lastVerifiedAt: row.last_verified_at ?? null, available: row.available_capacity ?? 0, total: row.total_capacity ?? 0, roomType: row.room_type ?? 'Not specified', genderPreference: row.gender_preference ?? 'Not provided', image, verified: row.verification_status === 'admin_verified', food: row.food_available, laundry: row.laundry_available, wifi: row.wifi_available } }
+function mapListing(row: any): Listing {
+  const images = (row.listing_images || []).map((item: any) => item.image_url).filter(Boolean);
+  const image = row.listing_images?.find((item: any) => item.is_primary)?.image_url ?? images[0] ?? '';
+  const summary = Array.isArray(row.listing_review_summary) ? row.listing_review_summary[0] : row.listing_review_summary;
+  return {
+    id: row.id,
+    title: row.title,
+    category: row.category,
+    locality: row.locality ?? '',
+    city: row.city ?? '',
+    latitude: Number(row.latitude ?? 18.5204),
+    longitude: Number(row.longitude ?? 73.8567),
+    price: Number(row.monthly_rent ?? 0),
+    foodCost: row.food_cost === null || row.food_cost === undefined ? null : Number(row.food_cost),
+    electricityCost: row.electricity_cost === null || row.electricity_cost === undefined ? null : Number(row.electricity_cost),
+    wifiCost: row.wifi_cost === null || row.wifi_cost === undefined ? null : Number(row.wifi_cost),
+    laundryCost: row.laundry_cost === null || row.laundry_cost === undefined ? null : Number(row.laundry_cost),
+    maintenanceCost: row.maintenance_cost === null || row.maintenance_cost === undefined ? null : Number(row.maintenance_cost),
+    travelCost: row.travel_cost_estimate === null || row.travel_cost_estimate === undefined ? null : Number(row.travel_cost_estimate),
+    securityDeposit: row.security_deposit === null || row.security_deposit === undefined ? null : Number(row.security_deposit),
+    distance: row.distance_km === null || row.distance_km === undefined ? null : Number(row.distance_km),
+    rating: summary?.average_rating === null || summary?.average_rating === undefined ? null : Number(summary.average_rating),
+    lastVerifiedAt: row.last_verified_at ?? null,
+    available: row.available_capacity ?? 0,
+    total: row.total_capacity ?? 0,
+    roomType: row.room_type ?? 'Not specified',
+    genderPreference: row.gender_preference ?? 'Not provided',
+    image,
+    images,
+    hasRealPhotos: images.length > 0,
+    mapsUrl: row.latitude && row.longitude ? `https://www.google.com/maps?q=${row.latitude},${row.longitude}+(${encodeURIComponent(row.title)})` : undefined,
+    verified: row.verification_status === 'admin_verified',
+    food: row.food_available,
+    laundry: row.laundry_available,
+    wifi: row.wifi_available
+  }
+}
 
 export async function fetchListings(filters: ListingFilters = {}) { const client = requireSupabase(); let query = client.from('listings').select('*, listing_images(image_url,is_primary), listing_review_summary(average_rating)').eq('status', 'approved').eq('is_active', true); if (filters.query) { const value = filters.query.replace(/[,()]/g, ' '); query = query.or(`title.ilike.%${value}%,locality.ilike.%${value}%,city.ilike.%${value}%,college_name.ilike.%${value}%,category.ilike.%${value}%`) } if (filters.category && filters.category !== 'all') query = query.eq('category', filters.category); if (filters.collegeName) query = query.ilike('college_name', `%${filters.collegeName}%`); if (filters.maxRent !== undefined) query = query.lte('monthly_rent', filters.maxRent); if (filters.maxDistance !== undefined) query = query.lte('distance_km', filters.maxDistance); if (filters.roomType) query = query.eq('room_type', filters.roomType); if (filters.gender) query = query.eq('gender_preference', filters.gender); if (filters.food) query = query.eq('food_available', true); if (filters.laundry) query = query.eq('laundry_available', true); if (filters.wifi) query = query.eq('wifi_available', true); if (filters.minAvailable !== undefined) query = query.gte('available_capacity', filters.minAvailable); if (filters.recentlyVerified) query = query.gte('last_verified_at', new Date(Date.now() - 30 * 86400000).toISOString()); if (filters.sort === 'cost') query = query.order('monthly_rent', { ascending: true }); else if (filters.sort === 'distance') query = query.order('distance_km', { ascending: true, nullsFirst: false }); else if (filters.sort === 'updated') query = query.order('updated_at', { ascending: false }); const { data, error } = await query; if (error) throw error; let result = (data ?? []).map(mapListing); const maxTotal = filters.maxTotal; if (maxTotal !== undefined) result = result.filter((listing) => [listing.price, listing.foodCost, listing.electricityCost, listing.wifiCost, listing.laundryCost, listing.maintenanceCost, listing.travelCost].reduce((sum: number, value: number | null) => sum + (value ?? 0), 0) <= maxTotal); if (filters.sort === 'rating') result.sort((left, right) => (right.rating ?? -1) - (left.rating ?? -1)); return result }
 

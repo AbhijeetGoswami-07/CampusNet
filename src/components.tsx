@@ -12,8 +12,8 @@ export type Listing = {
   category: string;
   locality: string;
   city: string;
-  latitude: number | null;
-  longitude: number | null;
+  latitude: number;
+  longitude: number;
   price: number;
   foodCost: number | null;
   electricityCost: number | null;
@@ -31,6 +31,11 @@ export type Listing = {
   genderPreference: string;
   image: string;
   images?: string[];
+  hasRealPhotos?: boolean;
+  mapsUrl?: string;
+  phoneNumber?: string;
+  address?: string;
+  userRatingCount?: number;
   verified: boolean;
   food: boolean;
   laundry: boolean;
@@ -41,19 +46,15 @@ export type Listing = {
 
 export const sampleListings: Listing[] = puneListings.map(p => ({
   ...p,
-  source: p.source,
+  source: p.source || 'Google Maps Verified',
   collegeName: p.collegeName,
-  images: [
-    p.image,
-    p.category === 'Flat'
-      ? '/hostels/student-flat-hall.jpg'
-      : p.genderPreference === 'Women'
-        ? '/hostels/girls-pg-room-mit.jpg'
-        : '/hostels/boys-pg-room-coep.jpg',
-    p.category === 'Flat'
-      ? '/hostels/flat-1.jpg'
-      : '/hostels/real-hostel-common-area.jpg'
-  ]
+  hasRealPhotos: Boolean(p.hasRealPhotos && p.images && p.images.length > 0),
+  images: p.images || (p.image ? [p.image] : []),
+  image: (p.images && p.images[0]) || p.image || '',
+  mapsUrl: p.mapsUrl || (p.latitude && p.longitude ? `https://www.google.com/maps?q=${p.latitude},${p.longitude}+(${encodeURIComponent(p.title)})` : undefined),
+  phoneNumber: p.phoneNumber,
+  address: p.address,
+  userRatingCount: p.userRatingCount
 }))
 
 export function Navbar({ onNavigate, active = 'home', signedIn = false, role, onLogout }: { onNavigate: (page: string) => void; active?: string; signedIn?: boolean; role?: 'student' | 'provider' | 'admin' | null; onLogout?: () => void }) {
@@ -217,6 +218,7 @@ export function ListingCard({
   saved?: boolean;
 }) {
   const [internalCompared, setInternalCompared] = useState(() => isListingCompared(listing.id))
+  const [imgFailed, setImgFailed] = useState(false)
 
   useEffect(() => {
     const handleSync = () => setInternalCompared(isListingCompared(listing.id))
@@ -238,36 +240,68 @@ export function ListingCard({
     }
   }
 
-  const gmapUrl = `https://www.google.com/maps?q=${listing.latitude},${listing.longitude}+(${encodeURIComponent(listing.title)})`
+  const gmapUrl = listing.mapsUrl || `https://www.google.com/maps?q=${listing.latitude},${listing.longitude}+(${encodeURIComponent(listing.title)})`
+  const hasReal = Boolean(listing.hasRealPhotos && listing.images && listing.images.length > 0 && !imgFailed)
 
   return (
     <article className="component-listing-card horizontal-card">
-      <div className="card-image-wrap" onClick={onOpen}>
-        <img
-          src={listing.image}
-          alt={`${listing.title} interior`}
-          loading="lazy"
-          onError={(e) => {
-            (e.currentTarget as HTMLImageElement).src = '/hostels/hostel-room-1.jpg'
-          }}
-        />
-        {/* In small left of the image mention what kind of accommodation it is */}
-        <span className="card-category-badge">{listing.category}</span>
-
-        {/* Wishlist quick overlay on image */}
-        <button
-          type="button"
-          className={`card-wishlist-overlay ${saved ? 'saved' : ''}`}
-          onClick={(e) => {
-            e.stopPropagation()
-            onSave?.()
-          }}
-          aria-label={saved ? 'Remove from wishlist' : 'Save to wishlist'}
-          title={saved ? 'Remove from wishlist' : 'Save to wishlist'}
-        >
-          <Heart size={16} fill={saved ? '#ef4444' : 'rgba(0,0,0,0.3)'} color={saved ? '#ef4444' : '#ffffff'} />
-        </button>
-      </div>
+      {hasReal ? (
+        <div className="card-image-wrap" onClick={onOpen}>
+          <img
+            src={listing.images?.[0] || listing.image}
+            alt={`${listing.title} real photo`}
+            loading="lazy"
+            onError={() => setImgFailed(true)}
+          />
+          <span className="card-category-badge">{listing.category}</span>
+          <span className="real-photo-badge">📸 Real Photo</span>
+          <button
+            type="button"
+            className={`card-wishlist-overlay ${saved ? 'saved' : ''}`}
+            onClick={(e) => {
+              e.stopPropagation()
+              onSave?.()
+            }}
+            aria-label={saved ? 'Remove from wishlist' : 'Save to wishlist'}
+            title={saved ? 'Remove from wishlist' : 'Save to wishlist'}
+          >
+            <Heart size={16} fill={saved ? '#ef4444' : 'rgba(0,0,0,0.3)'} color={saved ? '#ef4444' : '#ffffff'} />
+          </button>
+        </div>
+      ) : (
+        <div className="card-image-wrap card-fallback-wrap" onClick={onOpen}>
+          <div className="card-fallback-canvas">
+            <div className="fallback-category-icon">
+              {listing.category === 'Hostel' ? '🏢' : listing.category === 'Flat' ? '🏠' : listing.category === 'Mess' ? '🍽️' : listing.category === 'Laundry' ? '🧺' : '🛏️'}
+            </div>
+            <span className="fallback-locality">{listing.locality}, Pune</span>
+            <span className="fallback-verified-pill">Google Maps Verified</span>
+            <a
+              href={gmapUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="fallback-gmap-btn"
+              onClick={(e) => e.stopPropagation()}
+              title="View photos and location directly on Google Maps"
+            >
+              <ExternalLink size={12} /> View Photos on Google Maps
+            </a>
+          </div>
+          <span className="card-category-badge">{listing.category}</span>
+          <button
+            type="button"
+            className={`card-wishlist-overlay ${saved ? 'saved' : ''}`}
+            onClick={(e) => {
+              e.stopPropagation()
+              onSave?.()
+            }}
+            aria-label={saved ? 'Remove from wishlist' : 'Save to wishlist'}
+            title={saved ? 'Remove from wishlist' : 'Save to wishlist'}
+          >
+            <Heart size={16} fill={saved ? '#ef4444' : 'rgba(0,0,0,0.3)'} color={saved ? '#ef4444' : '#ffffff'} />
+          </button>
+        </div>
+      )}
 
       <div className="card-content">
         <div>
@@ -859,43 +893,61 @@ export function CompareFloatingDock({ go }: { go: (page: string) => void }) {
 }
 
 export function ImageGallery({ listing }: { listing: Listing }) {
-  const images = (listing.images && listing.images.length >= 3)
-    ? listing.images
-    : [
-        listing.image,
-        listing.category === 'Flat'
-          ? '/hostels/flat-2.jpg'
-          : '/hostels/hostel-room-2.jpg',
-        listing.category === 'Flat'
-          ? '/hostels/flat-3.jpg'
-          : '/hostels/hostel-room-3.jpg'
-      ]
+  const [failedImages, setFailedImages] = useState<Record<number, boolean>>({})
+  const validImages = (listing.images || (listing.image ? [listing.image] : [])).filter(Boolean)
+  const hasReal = Boolean(listing.hasRealPhotos && validImages.length > 0 && !failedImages[0])
+  const gmapUrl = listing.mapsUrl || `https://www.google.com/maps?q=${listing.latitude},${listing.longitude}+(${encodeURIComponent(listing.title)})`
+
+  if (!hasReal || validImages.length === 0) {
+    return (
+      <div className="detail-fallback-gallery">
+        <div className="detail-fallback-box">
+          <div className="detail-fallback-icon">
+            {listing.category === 'Hostel' ? '🏢' : listing.category === 'Flat' ? '🏠' : listing.category === 'Mess' ? '🍽️' : listing.category === 'Laundry' ? '🧺' : '🛏️'}
+          </div>
+          <h3>{listing.title}</h3>
+          <p className="detail-fallback-address">
+            <MapPin size={15} /> {listing.address || `${listing.locality}, Pune, Maharashtra`}
+          </p>
+          <div className="detail-fallback-notice">
+            <span>✓ Verified on Google Maps</span> · Real {listing.category} in {listing.locality}
+          </div>
+          <div>
+            <a
+              href={gmapUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="detail-fallback-map-btn"
+            >
+              <ExternalLink size={16} /> View Photos & Location on Google Maps ↗
+            </a>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="image-gallery">
       <img
-        src={images[0]}
-        alt={`${listing.title} main bedroom`}
-        onError={(e) => {
-          (e.currentTarget as HTMLImageElement).src = '/hostels/hostel-room-1.jpg'
-        }}
+        src={validImages[0]}
+        alt={`${listing.title} main photo`}
+        onError={() => setFailedImages((prev) => ({ ...prev, 0: true }))}
       />
-      <div>
-        <img
-          src={images[1]}
-          alt={`${listing.title} living / study area`}
-          onError={(e) => {
-            (e.currentTarget as HTMLImageElement).src = '/hostels/hostel-room-2.jpg'
-          }}
-        />
-        <img
-          src={images[2]}
-          alt={`${listing.title} washroom or balcony`}
-          onError={(e) => {
-            (e.currentTarget as HTMLImageElement).src = '/hostels/hostel-room-3.jpg'
-          }}
-        />
-      </div>
+      {validImages.length > 1 ? (
+        <div>
+          {validImages.slice(1, 3).map((img, idx) => (
+            !failedImages[idx + 1] ? (
+              <img
+                key={idx}
+                src={img}
+                alt={`${listing.title} photo ${idx + 2}`}
+                onError={() => setFailedImages((prev) => ({ ...prev, [idx + 1]: true }))}
+              />
+            ) : null
+          ))}
+        </div>
+      ) : null}
     </div>
   )
 }

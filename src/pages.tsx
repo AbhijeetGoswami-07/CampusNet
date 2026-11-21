@@ -124,7 +124,7 @@ export function HomePage({ go }: { go: (page: string) => void }) {
               style={{ padding: '12px 24px', fontSize: 13 }}
               onClick={() => setShowAllHomes(true)}
             >
-              Show all 24 verified homes ({sampleListings.length - 9} more)
+              Show all {sampleListings.length} verified homes ({sampleListings.length - 9} more)
             </button>
           ) : (
             <button
@@ -196,7 +196,7 @@ export function ListingPage({ id, go }: { id: string; go: (page: string) => void
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
   }, [id])
 
-  const googleMapsUrl = `https://www.google.com/maps?q=${listing.latitude},${listing.longitude}+(${encodeURIComponent(
+  const googleMapsUrl = listing.mapsUrl || `https://www.google.com/maps?q=${listing.latitude},${listing.longitude}+(${encodeURIComponent(
     listing.title
   )})`
 
@@ -1063,7 +1063,7 @@ export function LiveListingPage({ id, go }: { id: string; go: (page: string) => 
 
   if (!listing) return <section className="page-section"><EmptyState title="Listing unavailable" text="This listing may have been removed or is awaiting approval." /></section>
 
-  const googleMapsUrl = `https://www.google.com/maps?q=${listing.latitude},${listing.longitude}+(${encodeURIComponent(
+  const googleMapsUrl = listing.mapsUrl || `https://www.google.com/maps?q=${listing.latitude},${listing.longitude}+(${encodeURIComponent(
     listing.title
   )})`
 
@@ -1308,6 +1308,7 @@ export function CompareSearchPage({
     return () => window.removeEventListener('campusnet_saved_change', handleSavedChange)
   }, [])
   const [showMap, setShowMap] = useState(false)
+  const [realPhotosOnly, setRealPhotosOnly] = useState(false)
   const [error, setError] = useState('')
   const [activeFilters, setActiveFilters] = useState<ListingFilters>(() => ({
     sort: 'updated',
@@ -1333,6 +1334,9 @@ export function CompareSearchPage({
 
   const available = useMemo(() => {
     return baseListings.filter((item) => {
+      if (realPhotosOnly && !item.hasRealPhotos) {
+        return false
+      }
       if (activeFilters.query) {
         const q = activeFilters.query.toLowerCase().trim()
         const matchesQuery =
@@ -1488,9 +1492,22 @@ export function CompareSearchPage({
           </div>
 
           <div className="result-toolbar">
-            <b>
-              Showing {available.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, available.length)} of {available.length} verified accommodations
-            </b>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <b>
+                Showing {available.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, available.length)} of {available.length} verified accommodations
+              </b>
+              <button
+                type="button"
+                className={`real-photos-toggle-btn ${realPhotosOnly ? 'active' : ''}`}
+                onClick={() => {
+                  setCurrentPage(1)
+                  setRealPhotosOnly(v => !v)
+                }}
+                title="Show only listings with real uploaded photos"
+              >
+                📸 Real Photos Only {baseListings.filter(l => l.hasRealPhotos).length > 0 ? `(${baseListings.filter(l => l.hasRealPhotos).length})` : ''}
+              </button>
+            </div>
             <span style={{ fontSize: 12, color: 'var(--muted)' }}>
               Check 'Compare' on any 2 or 3 cards to view side-by-side
             </span>
